@@ -1,0 +1,2 @@
+#to switch checkouts to push changes upstream
+git checkout -B test

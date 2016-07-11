@@ -1,0 +1,928 @@
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    /*<a name="line.1"></a>
+<FONT color="green">002</FONT>     * Copyright 2014-2016 UnboundID Corp.<a name="line.2"></a>
+<FONT color="green">003</FONT>     * All Rights Reserved.<a name="line.3"></a>
+<FONT color="green">004</FONT>     */<a name="line.4"></a>
+<FONT color="green">005</FONT>    /*<a name="line.5"></a>
+<FONT color="green">006</FONT>     * Copyright (C) 2014-2016 UnboundID Corp.<a name="line.6"></a>
+<FONT color="green">007</FONT>     *<a name="line.7"></a>
+<FONT color="green">008</FONT>     * This program is free software; you can redistribute it and/or modify<a name="line.8"></a>
+<FONT color="green">009</FONT>     * it under the terms of the GNU General Public License (GPLv2 only)<a name="line.9"></a>
+<FONT color="green">010</FONT>     * or the terms of the GNU Lesser General Public License (LGPLv2.1 only)<a name="line.10"></a>
+<FONT color="green">011</FONT>     * as published by the Free Software Foundation.<a name="line.11"></a>
+<FONT color="green">012</FONT>     *<a name="line.12"></a>
+<FONT color="green">013</FONT>     * This program is distributed in the hope that it will be useful,<a name="line.13"></a>
+<FONT color="green">014</FONT>     * but WITHOUT ANY WARRANTY; without even the implied warranty of<a name="line.14"></a>
+<FONT color="green">015</FONT>     * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the<a name="line.15"></a>
+<FONT color="green">016</FONT>     * GNU General Public License for more details.<a name="line.16"></a>
+<FONT color="green">017</FONT>     *<a name="line.17"></a>
+<FONT color="green">018</FONT>     * You should have received a copy of the GNU General Public License<a name="line.18"></a>
+<FONT color="green">019</FONT>     * along with this program; if not, see &lt;http://www.gnu.org/licenses&gt;.<a name="line.19"></a>
+<FONT color="green">020</FONT>     */<a name="line.20"></a>
+<FONT color="green">021</FONT>    package com.unboundid.util;<a name="line.21"></a>
+<FONT color="green">022</FONT>    <a name="line.22"></a>
+<FONT color="green">023</FONT>    <a name="line.23"></a>
+<FONT color="green">024</FONT>    <a name="line.24"></a>
+<FONT color="green">025</FONT>    import java.io.BufferedReader;<a name="line.25"></a>
+<FONT color="green">026</FONT>    import java.io.File;<a name="line.26"></a>
+<FONT color="green">027</FONT>    import java.io.FileReader;<a name="line.27"></a>
+<FONT color="green">028</FONT>    import java.io.IOException;<a name="line.28"></a>
+<FONT color="green">029</FONT>    import java.io.PrintWriter;<a name="line.29"></a>
+<FONT color="green">030</FONT>    import java.io.Reader;<a name="line.30"></a>
+<FONT color="green">031</FONT>    import java.util.ArrayList;<a name="line.31"></a>
+<FONT color="green">032</FONT>    import java.util.Arrays;<a name="line.32"></a>
+<FONT color="green">033</FONT>    import java.util.Collections;<a name="line.33"></a>
+<FONT color="green">034</FONT>    import java.util.Iterator;<a name="line.34"></a>
+<FONT color="green">035</FONT>    import java.util.LinkedHashMap;<a name="line.35"></a>
+<FONT color="green">036</FONT>    import java.util.LinkedHashSet;<a name="line.36"></a>
+<FONT color="green">037</FONT>    import java.util.LinkedList;<a name="line.37"></a>
+<FONT color="green">038</FONT>    import java.util.List;<a name="line.38"></a>
+<FONT color="green">039</FONT>    import java.util.Map;<a name="line.39"></a>
+<FONT color="green">040</FONT>    import java.util.Set;<a name="line.40"></a>
+<FONT color="green">041</FONT>    import java.util.concurrent.CountDownLatch;<a name="line.41"></a>
+<FONT color="green">042</FONT>    import java.util.concurrent.TimeUnit;<a name="line.42"></a>
+<FONT color="green">043</FONT>    import java.util.regex.Pattern;<a name="line.43"></a>
+<FONT color="green">044</FONT>    <a name="line.44"></a>
+<FONT color="green">045</FONT>    import com.unboundid.util.args.ArgumentException;<a name="line.45"></a>
+<FONT color="green">046</FONT>    import com.unboundid.util.args.DurationArgument;<a name="line.46"></a>
+<FONT color="green">047</FONT>    <a name="line.47"></a>
+<FONT color="green">048</FONT>    import static com.unboundid.util.Debug.*;<a name="line.48"></a>
+<FONT color="green">049</FONT>    import static com.unboundid.util.UtilityMessages.*;<a name="line.49"></a>
+<FONT color="green">050</FONT>    <a name="line.50"></a>
+<FONT color="green">051</FONT>    <a name="line.51"></a>
+<FONT color="green">052</FONT>    <a name="line.52"></a>
+<FONT color="green">053</FONT>    /**<a name="line.53"></a>
+<FONT color="green">054</FONT>     * This class allows a FixedRateBarrier to change dynamically.  The rate changes<a name="line.54"></a>
+<FONT color="green">055</FONT>     * are governed by lines read from a {@code Reader} (typically backed by a<a name="line.55"></a>
+<FONT color="green">056</FONT>     * file). The input starts with a header that provides some global options and<a name="line.56"></a>
+<FONT color="green">057</FONT>     * then has a list of lines, where each line contains a single rate per second,<a name="line.57"></a>
+<FONT color="green">058</FONT>     * a comma, and a duration to maintain that rate.  Rates are specified as an<a name="line.58"></a>
+<FONT color="green">059</FONT>     * absolute rate per second or as a rate relative to the base rate per second.<a name="line.59"></a>
+<FONT color="green">060</FONT>     * The duration is an integer followed by a time unit (ms=milliseconds,<a name="line.60"></a>
+<FONT color="green">061</FONT>     * s=seconds, m=minutes, h=hours, and d=days).<a name="line.61"></a>
+<FONT color="green">062</FONT>     * &lt;BR&gt;&lt;BR&gt;<a name="line.62"></a>
+<FONT color="green">063</FONT>     * The following simple example will run at a target rate of 1000 per second<a name="line.63"></a>
+<FONT color="green">064</FONT>     * for one minute, and then 10000 per second for 10 seconds.<a name="line.64"></a>
+<FONT color="green">065</FONT>     * &lt;pre&gt;<a name="line.65"></a>
+<FONT color="green">066</FONT>     *   # format=rate-duration<a name="line.66"></a>
+<FONT color="green">067</FONT>     *   1000,1m<a name="line.67"></a>
+<FONT color="green">068</FONT>     *   10000,10s<a name="line.68"></a>
+<FONT color="green">069</FONT>     * &lt;/pre&gt;<a name="line.69"></a>
+<FONT color="green">070</FONT>     * &lt;BR&gt;<a name="line.70"></a>
+<FONT color="green">071</FONT>     * The following example has a default duration of one minute, and will repeat<a name="line.71"></a>
+<FONT color="green">072</FONT>     * the two intervals until this RateAdjustor is shut down.  The first interval<a name="line.72"></a>
+<FONT color="green">073</FONT>     * is run for the default of 1 minute at two and half times the base rate, and<a name="line.73"></a>
+<FONT color="green">074</FONT>     * then run for 10 seconds at 10000 per second.<a name="line.74"></a>
+<FONT color="green">075</FONT>     * &lt;pre&gt;<a name="line.75"></a>
+<FONT color="green">076</FONT>     *   # format=rate-duration<a name="line.76"></a>
+<FONT color="green">077</FONT>     *   # default-duration=1m<a name="line.77"></a>
+<FONT color="green">078</FONT>     *   # repeat=true<a name="line.78"></a>
+<FONT color="green">079</FONT>     *   2.5X<a name="line.79"></a>
+<FONT color="green">080</FONT>     *   10000,10s<a name="line.80"></a>
+<FONT color="green">081</FONT>     * &lt;/pre&gt;<a name="line.81"></a>
+<FONT color="green">082</FONT>     * A {@code RateAdjustor} is a daemon thread.  It is necessary to call the<a name="line.82"></a>
+<FONT color="green">083</FONT>     * {@code start()} method to start the thread and begin the rate changes.<a name="line.83"></a>
+<FONT color="green">084</FONT>     * Once this finished processing the rates, the thread will complete.<a name="line.84"></a>
+<FONT color="green">085</FONT>     * It can be stopped prematurely by calling {@code shutDown()}.<a name="line.85"></a>
+<FONT color="green">086</FONT>     * &lt;BR&gt;&lt;BR&gt;<a name="line.86"></a>
+<FONT color="green">087</FONT>     * The header can contain the following options:<a name="line.87"></a>
+<FONT color="green">088</FONT>     * &lt;UL&gt;<a name="line.88"></a>
+<FONT color="green">089</FONT>     *   &lt;LI&gt;{@code format} (required):  This must currently have the value<a name="line.89"></a>
+<FONT color="green">090</FONT>     *       {@code rate-duration}.&lt;/LI&gt;<a name="line.90"></a>
+<FONT color="green">091</FONT>     *   &lt;LI&gt;{@code default-duration} (optional):  This can specify a default<a name="line.91"></a>
+<FONT color="green">092</FONT>     *       duration for intervals that do not include a duration.  The format<a name="line.92"></a>
+<FONT color="green">093</FONT>     *       is an integer followed by a time unit as described above.&lt;/LI&gt;<a name="line.93"></a>
+<FONT color="green">094</FONT>     *   &lt;LI&gt;{@code repeat} (optional):  If this has a value of {@code true}, then<a name="line.94"></a>
+<FONT color="green">095</FONT>     *       the rates in the input will be repeated until {@code shutDown()} is<a name="line.95"></a>
+<FONT color="green">096</FONT>     *       called.&lt;/LI&gt;<a name="line.96"></a>
+<FONT color="green">097</FONT>     * &lt;/UL&gt;<a name="line.97"></a>
+<FONT color="green">098</FONT>     */<a name="line.98"></a>
+<FONT color="green">099</FONT>    @ThreadSafety(level = ThreadSafetyLevel.MOSTLY_THREADSAFE)<a name="line.99"></a>
+<FONT color="green">100</FONT>    public final class RateAdjustor extends Thread<a name="line.100"></a>
+<FONT color="green">101</FONT>    {<a name="line.101"></a>
+<FONT color="green">102</FONT>      /**<a name="line.102"></a>
+<FONT color="green">103</FONT>       * This starts a comment in the input.<a name="line.103"></a>
+<FONT color="green">104</FONT>       */<a name="line.104"></a>
+<FONT color="green">105</FONT>      public static final char COMMENT_START = '#';<a name="line.105"></a>
+<FONT color="green">106</FONT>    <a name="line.106"></a>
+<FONT color="green">107</FONT>    <a name="line.107"></a>
+<FONT color="green">108</FONT>    <a name="line.108"></a>
+<FONT color="green">109</FONT>      /**<a name="line.109"></a>
+<FONT color="green">110</FONT>       * The text that must appear on a line by itself in order to denote that the<a name="line.110"></a>
+<FONT color="green">111</FONT>       * end of the file header has been reached.<a name="line.111"></a>
+<FONT color="green">112</FONT>       */<a name="line.112"></a>
+<FONT color="green">113</FONT>      public static final String END_HEADER_TEXT = "END HEADER";<a name="line.113"></a>
+<FONT color="green">114</FONT>    <a name="line.114"></a>
+<FONT color="green">115</FONT>    <a name="line.115"></a>
+<FONT color="green">116</FONT>    <a name="line.116"></a>
+<FONT color="green">117</FONT>      /**<a name="line.117"></a>
+<FONT color="green">118</FONT>       * The header key that represents the default duration.<a name="line.118"></a>
+<FONT color="green">119</FONT>       */<a name="line.119"></a>
+<FONT color="green">120</FONT>      public static final String DEFAULT_DURATION_KEY = "default-duration";<a name="line.120"></a>
+<FONT color="green">121</FONT>    <a name="line.121"></a>
+<FONT color="green">122</FONT>    <a name="line.122"></a>
+<FONT color="green">123</FONT>    <a name="line.123"></a>
+<FONT color="green">124</FONT>      /**<a name="line.124"></a>
+<FONT color="green">125</FONT>       * The header key that represents the format of the file.<a name="line.125"></a>
+<FONT color="green">126</FONT>       */<a name="line.126"></a>
+<FONT color="green">127</FONT>      public static final String FORMAT_KEY = "format";<a name="line.127"></a>
+<FONT color="green">128</FONT>    <a name="line.128"></a>
+<FONT color="green">129</FONT>    <a name="line.129"></a>
+<FONT color="green">130</FONT>    <a name="line.130"></a>
+<FONT color="green">131</FONT>      /**<a name="line.131"></a>
+<FONT color="green">132</FONT>       * The value of the format key that represents a list of rates and durations<a name="line.132"></a>
+<FONT color="green">133</FONT>       * within the input file.<a name="line.133"></a>
+<FONT color="green">134</FONT>       */<a name="line.134"></a>
+<FONT color="green">135</FONT>      public static final String FORMAT_VALUE_RATE_DURATION = "rate-and-duration";<a name="line.135"></a>
+<FONT color="green">136</FONT>    <a name="line.136"></a>
+<FONT color="green">137</FONT>    <a name="line.137"></a>
+<FONT color="green">138</FONT>    <a name="line.138"></a>
+<FONT color="green">139</FONT>      /**<a name="line.139"></a>
+<FONT color="green">140</FONT>       * A list of all formats that we support.<a name="line.140"></a>
+<FONT color="green">141</FONT>       */<a name="line.141"></a>
+<FONT color="green">142</FONT>      public static final List&lt;String&gt; FORMATS =<a name="line.142"></a>
+<FONT color="green">143</FONT>           Arrays.asList(FORMAT_VALUE_RATE_DURATION);<a name="line.143"></a>
+<FONT color="green">144</FONT>    <a name="line.144"></a>
+<FONT color="green">145</FONT>    <a name="line.145"></a>
+<FONT color="green">146</FONT>    <a name="line.146"></a>
+<FONT color="green">147</FONT>      /**<a name="line.147"></a>
+<FONT color="green">148</FONT>       * The header key that represents whether the input should be repeated.<a name="line.148"></a>
+<FONT color="green">149</FONT>       */<a name="line.149"></a>
+<FONT color="green">150</FONT>      public static final String REPEAT_KEY = "repeat";<a name="line.150"></a>
+<FONT color="green">151</FONT>    <a name="line.151"></a>
+<FONT color="green">152</FONT>    <a name="line.152"></a>
+<FONT color="green">153</FONT>    <a name="line.153"></a>
+<FONT color="green">154</FONT>      /**<a name="line.154"></a>
+<FONT color="green">155</FONT>       * A list of all header keys that we support.<a name="line.155"></a>
+<FONT color="green">156</FONT>       */<a name="line.156"></a>
+<FONT color="green">157</FONT>      public static final List&lt;String&gt; KEYS =<a name="line.157"></a>
+<FONT color="green">158</FONT>           Arrays.asList(DEFAULT_DURATION_KEY, FORMAT_KEY, REPEAT_KEY);<a name="line.158"></a>
+<FONT color="green">159</FONT>    <a name="line.159"></a>
+<FONT color="green">160</FONT>    <a name="line.160"></a>
+<FONT color="green">161</FONT>    <a name="line.161"></a>
+<FONT color="green">162</FONT>      // Other headers to consider:<a name="line.162"></a>
+<FONT color="green">163</FONT>      // * rate-multiplier, so you can easily proportionally increase or decrease<a name="line.163"></a>
+<FONT color="green">164</FONT>      //   every target rate without changing all the target rates directly.<a name="line.164"></a>
+<FONT color="green">165</FONT>      // * duration-multiplier, so you can easily proportionally increase or<a name="line.165"></a>
+<FONT color="green">166</FONT>      //   decrease the length of time to spend at target rates.<a name="line.166"></a>
+<FONT color="green">167</FONT>      // * rate-change-behavior, so you can specify the behavior that should be<a name="line.167"></a>
+<FONT color="green">168</FONT>      //   exhibited when transitioning from one rate to another (e.g., instant<a name="line.168"></a>
+<FONT color="green">169</FONT>      //   jump, linear acceleration, sine-based acceleration, etc.).<a name="line.169"></a>
+<FONT color="green">170</FONT>      // * jitter, so we can introduce some amount of random jitter in the target<a name="line.170"></a>
+<FONT color="green">171</FONT>      //   rate (in which the actual target rate may be frequently adjusted to be<a name="line.171"></a>
+<FONT color="green">172</FONT>      //   slightly higher or lower than the designated target rate).<a name="line.172"></a>
+<FONT color="green">173</FONT>      // * spike, so we can introduce periodic, substantial increases in the target<a name="line.173"></a>
+<FONT color="green">174</FONT>      //   rate.<a name="line.174"></a>
+<FONT color="green">175</FONT>    <a name="line.175"></a>
+<FONT color="green">176</FONT>    <a name="line.176"></a>
+<FONT color="green">177</FONT>    <a name="line.177"></a>
+<FONT color="green">178</FONT>      // The barrier whose rate is adjusted.<a name="line.178"></a>
+<FONT color="green">179</FONT>      private final FixedRateBarrier barrier;<a name="line.179"></a>
+<FONT color="green">180</FONT>    <a name="line.180"></a>
+<FONT color="green">181</FONT>      // A list of rates per second and the number of milliseconds that the<a name="line.181"></a>
+<FONT color="green">182</FONT>      // specified rate should be maintained.<a name="line.182"></a>
+<FONT color="green">183</FONT>      private final List&lt;ObjectPair&lt;Double,Long&gt;&gt; ratesAndDurations;<a name="line.183"></a>
+<FONT color="green">184</FONT>    <a name="line.184"></a>
+<FONT color="green">185</FONT>      // If this is true, then the ratesAndDurations will be repeated until this is<a name="line.185"></a>
+<FONT color="green">186</FONT>      // shut down.<a name="line.186"></a>
+<FONT color="green">187</FONT>      private final boolean repeat;<a name="line.187"></a>
+<FONT color="green">188</FONT>    <a name="line.188"></a>
+<FONT color="green">189</FONT>      // Set to true when this should shut down.<a name="line.189"></a>
+<FONT color="green">190</FONT>      private volatile boolean shutDown = false;<a name="line.190"></a>
+<FONT color="green">191</FONT>    <a name="line.191"></a>
+<FONT color="green">192</FONT>      // This is used to make sure we set the initial rate before start() returns.<a name="line.192"></a>
+<FONT color="green">193</FONT>      private final CountDownLatch initialRateSetLatch = new CountDownLatch(1);<a name="line.193"></a>
+<FONT color="green">194</FONT>    <a name="line.194"></a>
+<FONT color="green">195</FONT>      // This allows us to interrupt when we are sleeping.<a name="line.195"></a>
+<FONT color="green">196</FONT>      private final WakeableSleeper sleeper = new WakeableSleeper();<a name="line.196"></a>
+<FONT color="green">197</FONT>    <a name="line.197"></a>
+<FONT color="green">198</FONT>    <a name="line.198"></a>
+<FONT color="green">199</FONT>    <a name="line.199"></a>
+<FONT color="green">200</FONT>      /**<a name="line.200"></a>
+<FONT color="green">201</FONT>       * Returns a new RateAdjustor with the specified parameters.  See the<a name="line.201"></a>
+<FONT color="green">202</FONT>       * class-level javadoc for more information.<a name="line.202"></a>
+<FONT color="green">203</FONT>       *<a name="line.203"></a>
+<FONT color="green">204</FONT>       * @param  barrier            The barrier to update based on the specified<a name="line.204"></a>
+<FONT color="green">205</FONT>       *                            rates.<a name="line.205"></a>
+<FONT color="green">206</FONT>       * @param  baseRatePerSecond  The baseline rate per second, or {@code null}<a name="line.206"></a>
+<FONT color="green">207</FONT>       *                            if none was specified.<a name="line.207"></a>
+<FONT color="green">208</FONT>       * @param  rates              A file containing a list of rates and durations<a name="line.208"></a>
+<FONT color="green">209</FONT>       *                            as described in the class-level javadoc.<a name="line.209"></a>
+<FONT color="green">210</FONT>       *<a name="line.210"></a>
+<FONT color="green">211</FONT>       * @return  A new RateAdjustor constructed from the specified parameters.<a name="line.211"></a>
+<FONT color="green">212</FONT>       *<a name="line.212"></a>
+<FONT color="green">213</FONT>       * @throws  IOException               If there is a problem reading from<a name="line.213"></a>
+<FONT color="green">214</FONT>       *                                    the rates Reader.<a name="line.214"></a>
+<FONT color="green">215</FONT>       * @throws  IllegalArgumentException  If there is a problem with the rates<a name="line.215"></a>
+<FONT color="green">216</FONT>       *                                    input.<a name="line.216"></a>
+<FONT color="green">217</FONT>       */<a name="line.217"></a>
+<FONT color="green">218</FONT>      public static RateAdjustor newInstance(final FixedRateBarrier barrier,<a name="line.218"></a>
+<FONT color="green">219</FONT>                                             final Integer baseRatePerSecond,<a name="line.219"></a>
+<FONT color="green">220</FONT>                                             final File rates)<a name="line.220"></a>
+<FONT color="green">221</FONT>             throws IOException, IllegalArgumentException<a name="line.221"></a>
+<FONT color="green">222</FONT>      {<a name="line.222"></a>
+<FONT color="green">223</FONT>        final Reader reader = new FileReader(rates);<a name="line.223"></a>
+<FONT color="green">224</FONT>        return new RateAdjustor(<a name="line.224"></a>
+<FONT color="green">225</FONT>             barrier,<a name="line.225"></a>
+<FONT color="green">226</FONT>             (baseRatePerSecond == null) ? 0 : baseRatePerSecond,<a name="line.226"></a>
+<FONT color="green">227</FONT>             reader);<a name="line.227"></a>
+<FONT color="green">228</FONT>      }<a name="line.228"></a>
+<FONT color="green">229</FONT>    <a name="line.229"></a>
+<FONT color="green">230</FONT>    <a name="line.230"></a>
+<FONT color="green">231</FONT>    <a name="line.231"></a>
+<FONT color="green">232</FONT>      /**<a name="line.232"></a>
+<FONT color="green">233</FONT>       * Retrieves a string that may be used as the description of the argument that<a name="line.233"></a>
+<FONT color="green">234</FONT>       * specifies the path to a variable rate data file for use in conjunction with<a name="line.234"></a>
+<FONT color="green">235</FONT>       * this rate adjustor.<a name="line.235"></a>
+<FONT color="green">236</FONT>       *<a name="line.236"></a>
+<FONT color="green">237</FONT>       * @param  genArgName  The name of the argument that may be used to generate a<a name="line.237"></a>
+<FONT color="green">238</FONT>       *                     sample variable rate data file.<a name="line.238"></a>
+<FONT color="green">239</FONT>       *<a name="line.239"></a>
+<FONT color="green">240</FONT>       * @return   A string that may be used as the description of the argument that<a name="line.240"></a>
+<FONT color="green">241</FONT>       *           specifies the path to a variable rate data file for use in<a name="line.241"></a>
+<FONT color="green">242</FONT>       *           conjunction with this rate adjustor.<a name="line.242"></a>
+<FONT color="green">243</FONT>       */<a name="line.243"></a>
+<FONT color="green">244</FONT>      public static String getVariableRateDataArgumentDescription(<a name="line.244"></a>
+<FONT color="green">245</FONT>                                final String genArgName)<a name="line.245"></a>
+<FONT color="green">246</FONT>      {<a name="line.246"></a>
+<FONT color="green">247</FONT>        return INFO_RATE_ADJUSTOR_VARIABLE_RATE_DATA_ARG_DESCRIPTION.get(<a name="line.247"></a>
+<FONT color="green">248</FONT>             genArgName);<a name="line.248"></a>
+<FONT color="green">249</FONT>      }<a name="line.249"></a>
+<FONT color="green">250</FONT>    <a name="line.250"></a>
+<FONT color="green">251</FONT>    <a name="line.251"></a>
+<FONT color="green">252</FONT>    <a name="line.252"></a>
+<FONT color="green">253</FONT>      /**<a name="line.253"></a>
+<FONT color="green">254</FONT>       * Retrieves a string that may be used as the description of the argument that<a name="line.254"></a>
+<FONT color="green">255</FONT>       * generates a sample variable rate data file that serves as documentation of<a name="line.255"></a>
+<FONT color="green">256</FONT>       * the variable rate data format.<a name="line.256"></a>
+<FONT color="green">257</FONT>       *<a name="line.257"></a>
+<FONT color="green">258</FONT>       * @param  dataFileArgName  The name of the argument that specifies the path<a name="line.258"></a>
+<FONT color="green">259</FONT>       *                          to a file<a name="line.259"></a>
+<FONT color="green">260</FONT>       *<a name="line.260"></a>
+<FONT color="green">261</FONT>       * @return   A string that may be used as the description of the argument that<a name="line.261"></a>
+<FONT color="green">262</FONT>       *           generates a sample variable rate data file that serves as<a name="line.262"></a>
+<FONT color="green">263</FONT>       *           documentation of the variable rate data format.<a name="line.263"></a>
+<FONT color="green">264</FONT>       */<a name="line.264"></a>
+<FONT color="green">265</FONT>      public static String getGenerateSampleVariableRateFileDescription(<a name="line.265"></a>
+<FONT color="green">266</FONT>                                final String dataFileArgName)<a name="line.266"></a>
+<FONT color="green">267</FONT>      {<a name="line.267"></a>
+<FONT color="green">268</FONT>        return INFO_RATE_ADJUSTOR_GENERATE_SAMPLE_RATE_FILE_ARG_DESCRIPTION.get(<a name="line.268"></a>
+<FONT color="green">269</FONT>             dataFileArgName);<a name="line.269"></a>
+<FONT color="green">270</FONT>      }<a name="line.270"></a>
+<FONT color="green">271</FONT>    <a name="line.271"></a>
+<FONT color="green">272</FONT>    <a name="line.272"></a>
+<FONT color="green">273</FONT>    <a name="line.273"></a>
+<FONT color="green">274</FONT>      /**<a name="line.274"></a>
+<FONT color="green">275</FONT>       * Writes a sample variable write data file to the specified location.<a name="line.275"></a>
+<FONT color="green">276</FONT>       *<a name="line.276"></a>
+<FONT color="green">277</FONT>       * @param  f  The path to the file to be written.<a name="line.277"></a>
+<FONT color="green">278</FONT>       *<a name="line.278"></a>
+<FONT color="green">279</FONT>       * @throws  IOException  If a problem is encountered while writing to the<a name="line.279"></a>
+<FONT color="green">280</FONT>       *                       specified file.<a name="line.280"></a>
+<FONT color="green">281</FONT>       */<a name="line.281"></a>
+<FONT color="green">282</FONT>      public static void writeSampleVariableRateFile(final File f)<a name="line.282"></a>
+<FONT color="green">283</FONT>             throws IOException<a name="line.283"></a>
+<FONT color="green">284</FONT>      {<a name="line.284"></a>
+<FONT color="green">285</FONT>        final PrintWriter w = new PrintWriter(f);<a name="line.285"></a>
+<FONT color="green">286</FONT>        try<a name="line.286"></a>
+<FONT color="green">287</FONT>        {<a name="line.287"></a>
+<FONT color="green">288</FONT>          w.println("# This is an example variable rate data file.  All blank " +<a name="line.288"></a>
+<FONT color="green">289</FONT>               "lines will be ignored.");<a name="line.289"></a>
+<FONT color="green">290</FONT>          w.println("# All lines starting with the '#' character are considered " +<a name="line.290"></a>
+<FONT color="green">291</FONT>               "comments and will");<a name="line.291"></a>
+<FONT color="green">292</FONT>          w.println("# also be ignored.");<a name="line.292"></a>
+<FONT color="green">293</FONT>          w.println();<a name="line.293"></a>
+<FONT color="green">294</FONT>          w.println("# The beginning of the file must be a header containing " +<a name="line.294"></a>
+<FONT color="green">295</FONT>               "properties pertaining");<a name="line.295"></a>
+<FONT color="green">296</FONT>          w.println("# to the variable rate data.  All headers must be in the " +<a name="line.296"></a>
+<FONT color="green">297</FONT>               "format 'name=value',");<a name="line.297"></a>
+<FONT color="green">298</FONT>          w.println("# in which any spaces surrounding the equal sign will be " +<a name="line.298"></a>
+<FONT color="green">299</FONT>               "ignored.");<a name="line.299"></a>
+<FONT color="green">300</FONT>          w.println();<a name="line.300"></a>
+<FONT color="green">301</FONT>          w.println("# The first header should be the 'format' header, which " +<a name="line.301"></a>
+<FONT color="green">302</FONT>               "specifies the format");<a name="line.302"></a>
+<FONT color="green">303</FONT>          w.println("# for the variable rate data file.  This header is " +<a name="line.303"></a>
+<FONT color="green">304</FONT>               "required.  At present, the");<a name="line.304"></a>
+<FONT color="green">305</FONT>          w.println("# only supported format is 'rate-and-duration', although " +<a name="line.305"></a>
+<FONT color="green">306</FONT>               "additional formats may");<a name="line.306"></a>
+<FONT color="green">307</FONT>          w.println("# be added in the future.");<a name="line.307"></a>
+<FONT color="green">308</FONT>          w.println("format = rate-and-duration");<a name="line.308"></a>
+<FONT color="green">309</FONT>          w.println();<a name="line.309"></a>
+<FONT color="green">310</FONT>          w.println("# The optional 'default-duration' header may be used to " +<a name="line.310"></a>
+<FONT color="green">311</FONT>               "specify a duration that");<a name="line.311"></a>
+<FONT color="green">312</FONT>          w.println("# will be used for any interval that does not explicitly " +<a name="line.312"></a>
+<FONT color="green">313</FONT>               "specify a duration.");<a name="line.313"></a>
+<FONT color="green">314</FONT>          w.println("# The duration must consist of a positive integer value " +<a name="line.314"></a>
+<FONT color="green">315</FONT>               "followed by a time");<a name="line.315"></a>
+<FONT color="green">316</FONT>          w.println("# unit (with zero or more spaces separating the integer " +<a name="line.316"></a>
+<FONT color="green">317</FONT>               "value from the unit).");<a name="line.317"></a>
+<FONT color="green">318</FONT>          w.println("# The supported time units are:");<a name="line.318"></a>
+<FONT color="green">319</FONT>          w.println("#");<a name="line.319"></a>
+<FONT color="green">320</FONT>          w.println("# - nanoseconds, nanosecond, nanos, nano, ns");<a name="line.320"></a>
+<FONT color="green">321</FONT>          w.println("# - microseconds, microseconds, micros, micro, us");<a name="line.321"></a>
+<FONT color="green">322</FONT>          w.println("# - milliseconds, millisecond, millis, milli, ms");<a name="line.322"></a>
+<FONT color="green">323</FONT>          w.println("# - seconds, second, secs, sec, s");<a name="line.323"></a>
+<FONT color="green">324</FONT>          w.println("# - minutes, minute, mins, min, m");<a name="line.324"></a>
+<FONT color="green">325</FONT>          w.println("# - hours, hour, hrs, hr, h");<a name="line.325"></a>
+<FONT color="green">326</FONT>          w.println("# - days, day, d");<a name="line.326"></a>
+<FONT color="green">327</FONT>          w.println("#");<a name="line.327"></a>
+<FONT color="green">328</FONT>          w.println("# If no 'default-duration' header is present, then every " +<a name="line.328"></a>
+<FONT color="green">329</FONT>               "data interval must");<a name="line.329"></a>
+<FONT color="green">330</FONT>          w.println("# include an explicitly-specified duration.");<a name="line.330"></a>
+<FONT color="green">331</FONT>          w.println("default-duration = 10 seconds");<a name="line.331"></a>
+<FONT color="green">332</FONT>          w.println();<a name="line.332"></a>
+<FONT color="green">333</FONT>          w.println("# The optional 'repeat' header may be used to indicate how " +<a name="line.333"></a>
+<FONT color="green">334</FONT>               "the tool should");<a name="line.334"></a>
+<FONT color="green">335</FONT>          w.println("# behave once the end of the variable rate data definitions " +<a name="line.335"></a>
+<FONT color="green">336</FONT>               "has been reached.");<a name="line.336"></a>
+<FONT color="green">337</FONT>          w.println("# If the 'repeat' header is present with a value of 'true', " +<a name="line.337"></a>
+<FONT color="green">338</FONT>               "then the tool will");<a name="line.338"></a>
+<FONT color="green">339</FONT>          w.println("# operate in an endless loop, returning to the beginning of " +<a name="line.339"></a>
+<FONT color="green">340</FONT>               "the variable rate");<a name="line.340"></a>
+<FONT color="green">341</FONT>          w.println("# definitions once the end has been reached.  If the " +<a name="line.341"></a>
+<FONT color="green">342</FONT>               "'repeat' header is present");<a name="line.342"></a>
+<FONT color="green">343</FONT>          w.println("# with a value of 'false', or if the 'repeat' header is " +<a name="line.343"></a>
+<FONT color="green">344</FONT>               "absent, then the tool");<a name="line.344"></a>
+<FONT color="green">345</FONT>          w.println("# will exit after it has processed all of the variable " +<a name="line.345"></a>
+<FONT color="green">346</FONT>               "rate definitions.");<a name="line.346"></a>
+<FONT color="green">347</FONT>          w.println("repeat = true");<a name="line.347"></a>
+<FONT color="green">348</FONT>          w.println();<a name="line.348"></a>
+<FONT color="green">349</FONT>          w.println("# After all header properties have been specified, the end " +<a name="line.349"></a>
+<FONT color="green">350</FONT>               "of the header must");<a name="line.350"></a>
+<FONT color="green">351</FONT>          w.println("# be signified with a line containing only the text 'END " +<a name="line.351"></a>
+<FONT color="green">352</FONT>               "HEADER'.");<a name="line.352"></a>
+<FONT color="green">353</FONT>          w.println("END HEADER");<a name="line.353"></a>
+<FONT color="green">354</FONT>          w.println();<a name="line.354"></a>
+<FONT color="green">355</FONT>          w.println();<a name="line.355"></a>
+<FONT color="green">356</FONT>          w.println("# After the header is complete, the variable rate " +<a name="line.356"></a>
+<FONT color="green">357</FONT>               "definitions should be");<a name="line.357"></a>
+<FONT color="green">358</FONT>          w.println("# provided.  Each definition should be given on a line by " +<a name="line.358"></a>
+<FONT color="green">359</FONT>               "itself, and should");<a name="line.359"></a>
+<FONT color="green">360</FONT>          w.println("# contain a target rate per second and an optional length " +<a name="line.360"></a>
+<FONT color="green">361</FONT>               "of time to maintain");<a name="line.361"></a>
+<FONT color="green">362</FONT>          w.println("# that rate.");<a name="line.362"></a>
+<FONT color="green">363</FONT>          w.println("#");<a name="line.363"></a>
+<FONT color="green">364</FONT>          w.println("# The target rate must always be present in a variable " +<a name="line.364"></a>
+<FONT color="green">365</FONT>               "rate definition.  It may");<a name="line.365"></a>
+<FONT color="green">366</FONT>          w.println("# be either a positive integer value that specifies the " +<a name="line.366"></a>
+<FONT color="green">367</FONT>               "absolute target rate");<a name="line.367"></a>
+<FONT color="green">368</FONT>          w.println("# per second (e.g., a value of '1000' indicates a target " +<a name="line.368"></a>
+<FONT color="green">369</FONT>               "rate of 1000");<a name="line.369"></a>
+<FONT color="green">370</FONT>          w.println("# operations per second), or it may be a floating-point " +<a name="line.370"></a>
+<FONT color="green">371</FONT>               "value followed by the");<a name="line.371"></a>
+<FONT color="green">372</FONT>          w.println("# letter 'x' to indicate that it is a multiplier of the " +<a name="line.372"></a>
+<FONT color="green">373</FONT>               "value specified by the");<a name="line.373"></a>
+<FONT color="green">374</FONT>          w.println("# '--ratePerSecond' argument (e.g., if the " +<a name="line.374"></a>
+<FONT color="green">375</FONT>               "'--ratePerSecond' argument is");<a name="line.375"></a>
+<FONT color="green">376</FONT>          w.println("# present with a value of 1000, then a target rate value " +<a name="line.376"></a>
+<FONT color="green">377</FONT>               "of '0.75x' indicates a");<a name="line.377"></a>
+<FONT color="green">378</FONT>          w.println("# target rate that is 75% of the '--ratePerSecond' value, " +<a name="line.378"></a>
+<FONT color="green">379</FONT>               "or 750 operations per");<a name="line.379"></a>
+<FONT color="green">380</FONT>          w.println("# second).  If the latter format is used, then the " +<a name="line.380"></a>
+<FONT color="green">381</FONT>               "'--ratePerSecond' argument");<a name="line.381"></a>
+<FONT color="green">382</FONT>          w.println("# must be provided.");<a name="line.382"></a>
+<FONT color="green">383</FONT>          w.println("#");<a name="line.383"></a>
+<FONT color="green">384</FONT>          w.println("# The duration may optionally be present in a variable " +<a name="line.384"></a>
+<FONT color="green">385</FONT>               "rate definition.  If");<a name="line.385"></a>
+<FONT color="green">386</FONT>          w.println("# present, it must be separated from the target rate by a " +<a name="line.386"></a>
+<FONT color="green">387</FONT>               "comma (and there may");<a name="line.387"></a>
+<FONT color="green">388</FONT>          w.println("# be zero or more spaces on either side of the comma).  " +<a name="line.388"></a>
+<FONT color="green">389</FONT>               "The duration must be in");<a name="line.389"></a>
+<FONT color="green">390</FONT>          w.println("# the same format as specified in the description of the " +<a name="line.390"></a>
+<FONT color="green">391</FONT>               "'default-duration'");<a name="line.391"></a>
+<FONT color="green">392</FONT>          w.println("# header above (i.e., a positive integer followed by a " +<a name="line.392"></a>
+<FONT color="green">393</FONT>               "time unit).  If a");<a name="line.393"></a>
+<FONT color="green">394</FONT>          w.println("# variable rate definition does not include a duration, " +<a name="line.394"></a>
+<FONT color="green">395</FONT>               "then the");<a name="line.395"></a>
+<FONT color="green">396</FONT>          w.println("# 'default-duration' header must have been specified, and " +<a name="line.396"></a>
+<FONT color="green">397</FONT>               "that default duration");<a name="line.397"></a>
+<FONT color="green">398</FONT>          w.println("# will be used for that variable rate definition.");<a name="line.398"></a>
+<FONT color="green">399</FONT>          w.println("#");<a name="line.399"></a>
+<FONT color="green">400</FONT>          w.println("# The following variable rate definitions may be used to " +<a name="line.400"></a>
+<FONT color="green">401</FONT>               "stairstep the target");<a name="line.401"></a>
+<FONT color="green">402</FONT>          w.println("# rate from 1000 operations per second to 10000 operations " +<a name="line.402"></a>
+<FONT color="green">403</FONT>               "per second, in");<a name="line.403"></a>
+<FONT color="green">404</FONT>          w.println("# increments of 1000 operations per second, spending one " +<a name="line.404"></a>
+<FONT color="green">405</FONT>               "minute at each level.");<a name="line.405"></a>
+<FONT color="green">406</FONT>          w.println("# If the 'repeat' header is present with a value of 'true', " +<a name="line.406"></a>
+<FONT color="green">407</FONT>               "then the process");<a name="line.407"></a>
+<FONT color="green">408</FONT>          w.println("# will start back over at 1000 operations per second after " +<a name="line.408"></a>
+<FONT color="green">409</FONT>               "completing one");<a name="line.409"></a>
+<FONT color="green">410</FONT>          w.println("# minute at 10000 operations per second.  Otherwise, the " +<a name="line.410"></a>
+<FONT color="green">411</FONT>               "tool will exit after");<a name="line.411"></a>
+<FONT color="green">412</FONT>          w.println("# completing the 10000 operation-per-second interval.");<a name="line.412"></a>
+<FONT color="green">413</FONT>          w.println("1000, 1 minute");<a name="line.413"></a>
+<FONT color="green">414</FONT>          w.println("2000, 1 minute");<a name="line.414"></a>
+<FONT color="green">415</FONT>          w.println("3000, 1 minute");<a name="line.415"></a>
+<FONT color="green">416</FONT>          w.println("4000, 1 minute");<a name="line.416"></a>
+<FONT color="green">417</FONT>          w.println("5000, 1 minute");<a name="line.417"></a>
+<FONT color="green">418</FONT>          w.println("6000, 1 minute");<a name="line.418"></a>
+<FONT color="green">419</FONT>          w.println("7000, 1 minute");<a name="line.419"></a>
+<FONT color="green">420</FONT>          w.println("8000, 1 minute");<a name="line.420"></a>
+<FONT color="green">421</FONT>          w.println("9000, 1 minute");<a name="line.421"></a>
+<FONT color="green">422</FONT>          w.println("10000, 1 minute");<a name="line.422"></a>
+<FONT color="green">423</FONT>          w.println();<a name="line.423"></a>
+<FONT color="green">424</FONT>        }<a name="line.424"></a>
+<FONT color="green">425</FONT>        finally<a name="line.425"></a>
+<FONT color="green">426</FONT>        {<a name="line.426"></a>
+<FONT color="green">427</FONT>          w.close();<a name="line.427"></a>
+<FONT color="green">428</FONT>        }<a name="line.428"></a>
+<FONT color="green">429</FONT>      }<a name="line.429"></a>
+<FONT color="green">430</FONT>    <a name="line.430"></a>
+<FONT color="green">431</FONT>    <a name="line.431"></a>
+<FONT color="green">432</FONT>    <a name="line.432"></a>
+<FONT color="green">433</FONT>      /**<a name="line.433"></a>
+<FONT color="green">434</FONT>       * Constructs a new RateAdjustor with the specified parameters.  See the<a name="line.434"></a>
+<FONT color="green">435</FONT>       * class-level javadoc for more information.<a name="line.435"></a>
+<FONT color="green">436</FONT>       *<a name="line.436"></a>
+<FONT color="green">437</FONT>       * @param  barrier            The barrier to update based on the specified<a name="line.437"></a>
+<FONT color="green">438</FONT>       *                            rates.<a name="line.438"></a>
+<FONT color="green">439</FONT>       * @param  baseRatePerSecond  The baseline rate per second, or 0 if none was<a name="line.439"></a>
+<FONT color="green">440</FONT>       *                            specified.<a name="line.440"></a>
+<FONT color="green">441</FONT>       * @param  rates              A list of rates and durations as described in<a name="line.441"></a>
+<FONT color="green">442</FONT>       *                            the class-level javadoc.  The reader will<a name="line.442"></a>
+<FONT color="green">443</FONT>       *                            always be closed before this method returns.<a name="line.443"></a>
+<FONT color="green">444</FONT>       *<a name="line.444"></a>
+<FONT color="green">445</FONT>       * @throws  IOException               If there is a problem reading from<a name="line.445"></a>
+<FONT color="green">446</FONT>       *                                    the rates Reader.<a name="line.446"></a>
+<FONT color="green">447</FONT>       * @throws  IllegalArgumentException  If there is a problem with the rates<a name="line.447"></a>
+<FONT color="green">448</FONT>       *                                    input.<a name="line.448"></a>
+<FONT color="green">449</FONT>       */<a name="line.449"></a>
+<FONT color="green">450</FONT>      public RateAdjustor(final FixedRateBarrier barrier,<a name="line.450"></a>
+<FONT color="green">451</FONT>                          final long baseRatePerSecond,<a name="line.451"></a>
+<FONT color="green">452</FONT>                          final Reader rates)<a name="line.452"></a>
+<FONT color="green">453</FONT>             throws IOException, IllegalArgumentException<a name="line.453"></a>
+<FONT color="green">454</FONT>      {<a name="line.454"></a>
+<FONT color="green">455</FONT>        // Read the header first.<a name="line.455"></a>
+<FONT color="green">456</FONT>        final List&lt;String&gt; lines;<a name="line.456"></a>
+<FONT color="green">457</FONT>        try<a name="line.457"></a>
+<FONT color="green">458</FONT>        {<a name="line.458"></a>
+<FONT color="green">459</FONT>          Validator.ensureNotNull(barrier, rates);<a name="line.459"></a>
+<FONT color="green">460</FONT>          setDaemon(true);<a name="line.460"></a>
+<FONT color="green">461</FONT>          this.barrier = barrier;<a name="line.461"></a>
+<FONT color="green">462</FONT>    <a name="line.462"></a>
+<FONT color="green">463</FONT>          lines = readLines(rates);<a name="line.463"></a>
+<FONT color="green">464</FONT>        }<a name="line.464"></a>
+<FONT color="green">465</FONT>        finally<a name="line.465"></a>
+<FONT color="green">466</FONT>        {<a name="line.466"></a>
+<FONT color="green">467</FONT>          rates.close();<a name="line.467"></a>
+<FONT color="green">468</FONT>        }<a name="line.468"></a>
+<FONT color="green">469</FONT>    <a name="line.469"></a>
+<FONT color="green">470</FONT>        final Map&lt;String,String&gt; header = consumeHeader(lines);<a name="line.470"></a>
+<FONT color="green">471</FONT>    <a name="line.471"></a>
+<FONT color="green">472</FONT>        final Set&lt;String&gt; invalidKeys = new LinkedHashSet&lt;String&gt;(header.keySet());<a name="line.472"></a>
+<FONT color="green">473</FONT>        invalidKeys.removeAll(KEYS);<a name="line.473"></a>
+<FONT color="green">474</FONT>        if (! invalidKeys.isEmpty())<a name="line.474"></a>
+<FONT color="green">475</FONT>        {<a name="line.475"></a>
+<FONT color="green">476</FONT>          throw new IllegalArgumentException(<a name="line.476"></a>
+<FONT color="green">477</FONT>               ERR_RATE_ADJUSTOR_INVALID_KEYS.get(invalidKeys, KEYS));<a name="line.477"></a>
+<FONT color="green">478</FONT>        }<a name="line.478"></a>
+<FONT color="green">479</FONT>    <a name="line.479"></a>
+<FONT color="green">480</FONT>        final String format = header.get(FORMAT_KEY);<a name="line.480"></a>
+<FONT color="green">481</FONT>        if (format == null)<a name="line.481"></a>
+<FONT color="green">482</FONT>        {<a name="line.482"></a>
+<FONT color="green">483</FONT>          throw new IllegalArgumentException(ERR_RATE_ADJUSTOR_MISSING_FORMAT.get(<a name="line.483"></a>
+<FONT color="green">484</FONT>               FORMAT_KEY, FORMATS, COMMENT_START));<a name="line.484"></a>
+<FONT color="green">485</FONT>        }<a name="line.485"></a>
+<FONT color="green">486</FONT>    <a name="line.486"></a>
+<FONT color="green">487</FONT>        if (! format.equals(FORMAT_VALUE_RATE_DURATION))<a name="line.487"></a>
+<FONT color="green">488</FONT>        {<a name="line.488"></a>
+<FONT color="green">489</FONT>          // For now this is the only format that we support.<a name="line.489"></a>
+<FONT color="green">490</FONT>          throw new IllegalArgumentException(<a name="line.490"></a>
+<FONT color="green">491</FONT>               ERR_RATE_ADJUSTOR_INVALID_FORMAT.get(format, FORMAT_KEY, FORMATS));<a name="line.491"></a>
+<FONT color="green">492</FONT>        }<a name="line.492"></a>
+<FONT color="green">493</FONT>    <a name="line.493"></a>
+<FONT color="green">494</FONT>        repeat = Boolean.parseBoolean(header.get(REPEAT_KEY));<a name="line.494"></a>
+<FONT color="green">495</FONT>    <a name="line.495"></a>
+<FONT color="green">496</FONT>        // This will be non-zero if it's set in the input.<a name="line.496"></a>
+<FONT color="green">497</FONT>        long defaultDurationMillis = 0;<a name="line.497"></a>
+<FONT color="green">498</FONT>        final String defaultDurationStr = header.get(DEFAULT_DURATION_KEY);<a name="line.498"></a>
+<FONT color="green">499</FONT>        if (defaultDurationStr != null)<a name="line.499"></a>
+<FONT color="green">500</FONT>        {<a name="line.500"></a>
+<FONT color="green">501</FONT>          try<a name="line.501"></a>
+<FONT color="green">502</FONT>          {<a name="line.502"></a>
+<FONT color="green">503</FONT>            defaultDurationMillis = DurationArgument.parseDuration(<a name="line.503"></a>
+<FONT color="green">504</FONT>                 defaultDurationStr, TimeUnit.MILLISECONDS);<a name="line.504"></a>
+<FONT color="green">505</FONT>          }<a name="line.505"></a>
+<FONT color="green">506</FONT>          catch (final ArgumentException e)<a name="line.506"></a>
+<FONT color="green">507</FONT>          {<a name="line.507"></a>
+<FONT color="green">508</FONT>            debugException(e);<a name="line.508"></a>
+<FONT color="green">509</FONT>            throw new IllegalArgumentException(<a name="line.509"></a>
+<FONT color="green">510</FONT>                 ERR_RATE_ADJUSTOR_INVALID_DEFAULT_DURATION.get(<a name="line.510"></a>
+<FONT color="green">511</FONT>                            defaultDurationStr, e.getExceptionMessage()),<a name="line.511"></a>
+<FONT color="green">512</FONT>                 e);<a name="line.512"></a>
+<FONT color="green">513</FONT>          }<a name="line.513"></a>
+<FONT color="green">514</FONT>        }<a name="line.514"></a>
+<FONT color="green">515</FONT>    <a name="line.515"></a>
+<FONT color="green">516</FONT>        // Now parse out the rates and durations, which will look like this:<a name="line.516"></a>
+<FONT color="green">517</FONT>        //  1000,1s<a name="line.517"></a>
+<FONT color="green">518</FONT>        //  1.5,1d<a name="line.518"></a>
+<FONT color="green">519</FONT>        //  0.5X, 1m<a name="line.519"></a>
+<FONT color="green">520</FONT>        //  # Duration can be omitted if default-duration header was included.<a name="line.520"></a>
+<FONT color="green">521</FONT>        //  1000<a name="line.521"></a>
+<FONT color="green">522</FONT>        final List&lt;ObjectPair&lt;Double,Long&gt;&gt; ratesAndDurationList =<a name="line.522"></a>
+<FONT color="green">523</FONT>                new ArrayList&lt;ObjectPair&lt;Double,Long&gt;&gt;(10);<a name="line.523"></a>
+<FONT color="green">524</FONT>        final Pattern splitPattern = Pattern.compile("\\s*,\\s*");<a name="line.524"></a>
+<FONT color="green">525</FONT>        for (final String fullLine: lines)<a name="line.525"></a>
+<FONT color="green">526</FONT>        {<a name="line.526"></a>
+<FONT color="green">527</FONT>          // Strip out comments and white space.<a name="line.527"></a>
+<FONT color="green">528</FONT>          String line = fullLine;<a name="line.528"></a>
+<FONT color="green">529</FONT>          final int commentStart = fullLine.indexOf(COMMENT_START);<a name="line.529"></a>
+<FONT color="green">530</FONT>          if (commentStart &gt;= 0)<a name="line.530"></a>
+<FONT color="green">531</FONT>          {<a name="line.531"></a>
+<FONT color="green">532</FONT>            line = line.substring(0, commentStart);<a name="line.532"></a>
+<FONT color="green">533</FONT>          }<a name="line.533"></a>
+<FONT color="green">534</FONT>          line = line.trim();<a name="line.534"></a>
+<FONT color="green">535</FONT>    <a name="line.535"></a>
+<FONT color="green">536</FONT>          if (line.length() == 0)<a name="line.536"></a>
+<FONT color="green">537</FONT>          {<a name="line.537"></a>
+<FONT color="green">538</FONT>            continue;<a name="line.538"></a>
+<FONT color="green">539</FONT>          }<a name="line.539"></a>
+<FONT color="green">540</FONT>    <a name="line.540"></a>
+<FONT color="green">541</FONT>          final String[] fields = splitPattern.split(line);<a name="line.541"></a>
+<FONT color="green">542</FONT>          if (!((fields.length == 2) ||<a name="line.542"></a>
+<FONT color="green">543</FONT>                ((fields.length == 1) &amp;&amp; defaultDurationMillis != 0)))<a name="line.543"></a>
+<FONT color="green">544</FONT>          {<a name="line.544"></a>
+<FONT color="green">545</FONT>            throw new IllegalArgumentException(ERR_RATE_ADJUSTOR_INVALID_LINE.get(<a name="line.545"></a>
+<FONT color="green">546</FONT>                 fullLine, DEFAULT_DURATION_KEY));<a name="line.546"></a>
+<FONT color="green">547</FONT>          }<a name="line.547"></a>
+<FONT color="green">548</FONT>    <a name="line.548"></a>
+<FONT color="green">549</FONT>          String rateStr = fields[0];<a name="line.549"></a>
+<FONT color="green">550</FONT>    <a name="line.550"></a>
+<FONT color="green">551</FONT>          boolean isRateMultiplier = false;<a name="line.551"></a>
+<FONT color="green">552</FONT>          if (rateStr.endsWith("X") || rateStr.endsWith("x"))<a name="line.552"></a>
+<FONT color="green">553</FONT>          {<a name="line.553"></a>
+<FONT color="green">554</FONT>            rateStr = rateStr.substring(0, rateStr.length() - 1).trim();<a name="line.554"></a>
+<FONT color="green">555</FONT>            isRateMultiplier = true;<a name="line.555"></a>
+<FONT color="green">556</FONT>          }<a name="line.556"></a>
+<FONT color="green">557</FONT>    <a name="line.557"></a>
+<FONT color="green">558</FONT>          double rate;<a name="line.558"></a>
+<FONT color="green">559</FONT>          try<a name="line.559"></a>
+<FONT color="green">560</FONT>          {<a name="line.560"></a>
+<FONT color="green">561</FONT>            rate = Double.parseDouble(rateStr);<a name="line.561"></a>
+<FONT color="green">562</FONT>          }<a name="line.562"></a>
+<FONT color="green">563</FONT>          catch (final NumberFormatException e)<a name="line.563"></a>
+<FONT color="green">564</FONT>          {<a name="line.564"></a>
+<FONT color="green">565</FONT>            debugException(e);<a name="line.565"></a>
+<FONT color="green">566</FONT>            throw new IllegalArgumentException(<a name="line.566"></a>
+<FONT color="green">567</FONT>                 ERR_RATE_ADJUSTOR_INVALID_RATE.get(rateStr, fullLine), e);<a name="line.567"></a>
+<FONT color="green">568</FONT>          }<a name="line.568"></a>
+<FONT color="green">569</FONT>    <a name="line.569"></a>
+<FONT color="green">570</FONT>          // Values that look like 2X are a multiplier on the base rate.<a name="line.570"></a>
+<FONT color="green">571</FONT>          if (isRateMultiplier)<a name="line.571"></a>
+<FONT color="green">572</FONT>          {<a name="line.572"></a>
+<FONT color="green">573</FONT>            if (baseRatePerSecond &lt;= 0)<a name="line.573"></a>
+<FONT color="green">574</FONT>            {<a name="line.574"></a>
+<FONT color="green">575</FONT>              throw new IllegalArgumentException(<a name="line.575"></a>
+<FONT color="green">576</FONT>                      ERR_RATE_ADJUSTOR_RELATIVE_RATE_WITHOUT_BASELINE.get(<a name="line.576"></a>
+<FONT color="green">577</FONT>                              rateStr, fullLine));<a name="line.577"></a>
+<FONT color="green">578</FONT>            }<a name="line.578"></a>
+<FONT color="green">579</FONT>    <a name="line.579"></a>
+<FONT color="green">580</FONT>            rate *= baseRatePerSecond;<a name="line.580"></a>
+<FONT color="green">581</FONT>          }<a name="line.581"></a>
+<FONT color="green">582</FONT>    <a name="line.582"></a>
+<FONT color="green">583</FONT>          final long durationMillis;<a name="line.583"></a>
+<FONT color="green">584</FONT>          if (fields.length &lt; 2)<a name="line.584"></a>
+<FONT color="green">585</FONT>          {<a name="line.585"></a>
+<FONT color="green">586</FONT>            durationMillis = defaultDurationMillis;<a name="line.586"></a>
+<FONT color="green">587</FONT>          }<a name="line.587"></a>
+<FONT color="green">588</FONT>          else<a name="line.588"></a>
+<FONT color="green">589</FONT>          {<a name="line.589"></a>
+<FONT color="green">590</FONT>            final String duration = fields[1];<a name="line.590"></a>
+<FONT color="green">591</FONT>            try<a name="line.591"></a>
+<FONT color="green">592</FONT>            {<a name="line.592"></a>
+<FONT color="green">593</FONT>              durationMillis = DurationArgument.parseDuration(<a name="line.593"></a>
+<FONT color="green">594</FONT>                      duration, TimeUnit.MILLISECONDS);<a name="line.594"></a>
+<FONT color="green">595</FONT>            }<a name="line.595"></a>
+<FONT color="green">596</FONT>            catch (final ArgumentException e)<a name="line.596"></a>
+<FONT color="green">597</FONT>            {<a name="line.597"></a>
+<FONT color="green">598</FONT>              debugException(e);<a name="line.598"></a>
+<FONT color="green">599</FONT>              throw new IllegalArgumentException(<a name="line.599"></a>
+<FONT color="green">600</FONT>                   ERR_RATE_ADJUSTOR_INVALID_DURATION.get(duration, fullLine,<a name="line.600"></a>
+<FONT color="green">601</FONT>                        e.getExceptionMessage()),<a name="line.601"></a>
+<FONT color="green">602</FONT>                   e);<a name="line.602"></a>
+<FONT color="green">603</FONT>            }<a name="line.603"></a>
+<FONT color="green">604</FONT>          }<a name="line.604"></a>
+<FONT color="green">605</FONT>    <a name="line.605"></a>
+<FONT color="green">606</FONT>          ratesAndDurationList.add(<a name="line.606"></a>
+<FONT color="green">607</FONT>               new ObjectPair&lt;Double,Long&gt;(rate, durationMillis));<a name="line.607"></a>
+<FONT color="green">608</FONT>        }<a name="line.608"></a>
+<FONT color="green">609</FONT>        ratesAndDurations = Collections.unmodifiableList(ratesAndDurationList);<a name="line.609"></a>
+<FONT color="green">610</FONT>      }<a name="line.610"></a>
+<FONT color="green">611</FONT>    <a name="line.611"></a>
+<FONT color="green">612</FONT>    <a name="line.612"></a>
+<FONT color="green">613</FONT>    <a name="line.613"></a>
+<FONT color="green">614</FONT>      /**<a name="line.614"></a>
+<FONT color="green">615</FONT>       * Starts this thread and waits for the initial rate to be set.<a name="line.615"></a>
+<FONT color="green">616</FONT>       */<a name="line.616"></a>
+<FONT color="green">617</FONT>      @Override<a name="line.617"></a>
+<FONT color="green">618</FONT>      public void start()<a name="line.618"></a>
+<FONT color="green">619</FONT>      {<a name="line.619"></a>
+<FONT color="green">620</FONT>        super.start();<a name="line.620"></a>
+<FONT color="green">621</FONT>    <a name="line.621"></a>
+<FONT color="green">622</FONT>        // Wait until the initial rate is set.  Assuming the caller starts this<a name="line.622"></a>
+<FONT color="green">623</FONT>        // RateAdjustor before the FixedRateBarrier is used by other threads,<a name="line.623"></a>
+<FONT color="green">624</FONT>        // this will guarantee that the initial rate is in place before the<a name="line.624"></a>
+<FONT color="green">625</FONT>        // barrier is used.<a name="line.625"></a>
+<FONT color="green">626</FONT>        try<a name="line.626"></a>
+<FONT color="green">627</FONT>        {<a name="line.627"></a>
+<FONT color="green">628</FONT>          initialRateSetLatch.await();<a name="line.628"></a>
+<FONT color="green">629</FONT>        }<a name="line.629"></a>
+<FONT color="green">630</FONT>        catch (final InterruptedException e)<a name="line.630"></a>
+<FONT color="green">631</FONT>        {<a name="line.631"></a>
+<FONT color="green">632</FONT>          debugException(e);<a name="line.632"></a>
+<FONT color="green">633</FONT>        }<a name="line.633"></a>
+<FONT color="green">634</FONT>      }<a name="line.634"></a>
+<FONT color="green">635</FONT>    <a name="line.635"></a>
+<FONT color="green">636</FONT>    <a name="line.636"></a>
+<FONT color="green">637</FONT>    <a name="line.637"></a>
+<FONT color="green">638</FONT>      /**<a name="line.638"></a>
+<FONT color="green">639</FONT>       * Adjusts the rate in FixedRateBarrier as described in the rates.<a name="line.639"></a>
+<FONT color="green">640</FONT>       */<a name="line.640"></a>
+<FONT color="green">641</FONT>      @Override<a name="line.641"></a>
+<FONT color="green">642</FONT>      public void run()<a name="line.642"></a>
+<FONT color="green">643</FONT>      {<a name="line.643"></a>
+<FONT color="green">644</FONT>        try<a name="line.644"></a>
+<FONT color="green">645</FONT>        {<a name="line.645"></a>
+<FONT color="green">646</FONT>          if (ratesAndDurations.isEmpty())<a name="line.646"></a>
+<FONT color="green">647</FONT>          {<a name="line.647"></a>
+<FONT color="green">648</FONT>            return;<a name="line.648"></a>
+<FONT color="green">649</FONT>          }<a name="line.649"></a>
+<FONT color="green">650</FONT>    <a name="line.650"></a>
+<FONT color="green">651</FONT>          do<a name="line.651"></a>
+<FONT color="green">652</FONT>          {<a name="line.652"></a>
+<FONT color="green">653</FONT>            final List&lt;ObjectPair&lt;Double,Long&gt;&gt; ratesAndEndTimes =<a name="line.653"></a>
+<FONT color="green">654</FONT>                 new ArrayList&lt;ObjectPair&lt;Double,Long&gt;&gt;(ratesAndDurations.size());<a name="line.654"></a>
+<FONT color="green">655</FONT>            long endTime = System.currentTimeMillis();<a name="line.655"></a>
+<FONT color="green">656</FONT>            for (final ObjectPair&lt;Double,Long&gt; rateAndDuration : ratesAndDurations)<a name="line.656"></a>
+<FONT color="green">657</FONT>            {<a name="line.657"></a>
+<FONT color="green">658</FONT>              endTime += rateAndDuration.getSecond();<a name="line.658"></a>
+<FONT color="green">659</FONT>              ratesAndEndTimes.add(new ObjectPair&lt;Double,Long&gt;(<a name="line.659"></a>
+<FONT color="green">660</FONT>                   rateAndDuration.getFirst(), endTime));<a name="line.660"></a>
+<FONT color="green">661</FONT>            }<a name="line.661"></a>
+<FONT color="green">662</FONT>    <a name="line.662"></a>
+<FONT color="green">663</FONT>            for (final ObjectPair&lt;Double,Long&gt; rateAndEndTime: ratesAndEndTimes)<a name="line.663"></a>
+<FONT color="green">664</FONT>            {<a name="line.664"></a>
+<FONT color="green">665</FONT>              if (shutDown)<a name="line.665"></a>
+<FONT color="green">666</FONT>              {<a name="line.666"></a>
+<FONT color="green">667</FONT>                return;<a name="line.667"></a>
+<FONT color="green">668</FONT>              }<a name="line.668"></a>
+<FONT color="green">669</FONT>    <a name="line.669"></a>
+<FONT color="green">670</FONT>              final double rate = rateAndEndTime.getFirst();<a name="line.670"></a>
+<FONT color="green">671</FONT>              final long intervalMillis = barrier.getTargetRate().getFirst();<a name="line.671"></a>
+<FONT color="green">672</FONT>              final int perInterval = calculatePerInterval(intervalMillis, rate);<a name="line.672"></a>
+<FONT color="green">673</FONT>    <a name="line.673"></a>
+<FONT color="green">674</FONT>              barrier.setRate(intervalMillis, perInterval);<a name="line.674"></a>
+<FONT color="green">675</FONT>    <a name="line.675"></a>
+<FONT color="green">676</FONT>              // Signal start() that we've set the initial rate.<a name="line.676"></a>
+<FONT color="green">677</FONT>              if (initialRateSetLatch.getCount() &gt; 0)<a name="line.677"></a>
+<FONT color="green">678</FONT>              {<a name="line.678"></a>
+<FONT color="green">679</FONT>                initialRateSetLatch.countDown();<a name="line.679"></a>
+<FONT color="green">680</FONT>              }<a name="line.680"></a>
+<FONT color="green">681</FONT>    <a name="line.681"></a>
+<FONT color="green">682</FONT>              // Hold at this rate for the specified duration.<a name="line.682"></a>
+<FONT color="green">683</FONT>              final long durationMillis =<a name="line.683"></a>
+<FONT color="green">684</FONT>                   rateAndEndTime.getSecond() - System.currentTimeMillis();<a name="line.684"></a>
+<FONT color="green">685</FONT>              if (durationMillis &gt; 0L)<a name="line.685"></a>
+<FONT color="green">686</FONT>              {<a name="line.686"></a>
+<FONT color="green">687</FONT>                sleeper.sleep(durationMillis);<a name="line.687"></a>
+<FONT color="green">688</FONT>              }<a name="line.688"></a>
+<FONT color="green">689</FONT>            }<a name="line.689"></a>
+<FONT color="green">690</FONT>          }<a name="line.690"></a>
+<FONT color="green">691</FONT>          while (repeat);<a name="line.691"></a>
+<FONT color="green">692</FONT>        }<a name="line.692"></a>
+<FONT color="green">693</FONT>        finally<a name="line.693"></a>
+<FONT color="green">694</FONT>        {<a name="line.694"></a>
+<FONT color="green">695</FONT>          // Just in case we happened to be shutdown before we were started.<a name="line.695"></a>
+<FONT color="green">696</FONT>          // We still want start() to be able to return.<a name="line.696"></a>
+<FONT color="green">697</FONT>          if (initialRateSetLatch.getCount() &gt; 0)<a name="line.697"></a>
+<FONT color="green">698</FONT>          {<a name="line.698"></a>
+<FONT color="green">699</FONT>            initialRateSetLatch.countDown();<a name="line.699"></a>
+<FONT color="green">700</FONT>          }<a name="line.700"></a>
+<FONT color="green">701</FONT>        }<a name="line.701"></a>
+<FONT color="green">702</FONT>      }<a name="line.702"></a>
+<FONT color="green">703</FONT>    <a name="line.703"></a>
+<FONT color="green">704</FONT>    <a name="line.704"></a>
+<FONT color="green">705</FONT>    <a name="line.705"></a>
+<FONT color="green">706</FONT>      /**<a name="line.706"></a>
+<FONT color="green">707</FONT>       * Signals this to shut down.<a name="line.707"></a>
+<FONT color="green">708</FONT>       */<a name="line.708"></a>
+<FONT color="green">709</FONT>      public void shutDown()<a name="line.709"></a>
+<FONT color="green">710</FONT>      {<a name="line.710"></a>
+<FONT color="green">711</FONT>        shutDown = true;<a name="line.711"></a>
+<FONT color="green">712</FONT>        sleeper.wakeup();<a name="line.712"></a>
+<FONT color="green">713</FONT>      }<a name="line.713"></a>
+<FONT color="green">714</FONT>    <a name="line.714"></a>
+<FONT color="green">715</FONT>    <a name="line.715"></a>
+<FONT color="green">716</FONT>    <a name="line.716"></a>
+<FONT color="green">717</FONT>      /**<a name="line.717"></a>
+<FONT color="green">718</FONT>       * Returns the of rates and durations.  This is primarily here for testing<a name="line.718"></a>
+<FONT color="green">719</FONT>       * purposes.<a name="line.719"></a>
+<FONT color="green">720</FONT>       *<a name="line.720"></a>
+<FONT color="green">721</FONT>       * @return  The list of rates and durations.<a name="line.721"></a>
+<FONT color="green">722</FONT>       */<a name="line.722"></a>
+<FONT color="green">723</FONT>      List&lt;ObjectPair&lt;Double,Long&gt;&gt; getRatesAndDurations()<a name="line.723"></a>
+<FONT color="green">724</FONT>      {<a name="line.724"></a>
+<FONT color="green">725</FONT>        return ratesAndDurations;<a name="line.725"></a>
+<FONT color="green">726</FONT>      }<a name="line.726"></a>
+<FONT color="green">727</FONT>    <a name="line.727"></a>
+<FONT color="green">728</FONT>    <a name="line.728"></a>
+<FONT color="green">729</FONT>    <a name="line.729"></a>
+<FONT color="green">730</FONT>      /**<a name="line.730"></a>
+<FONT color="green">731</FONT>       * Calculates the rate per interval given the specified interval width<a name="line.731"></a>
+<FONT color="green">732</FONT>       * and the target rate per second.  (This is static and non-private so that<a name="line.732"></a>
+<FONT color="green">733</FONT>       * it can be unit tested.)<a name="line.733"></a>
+<FONT color="green">734</FONT>       *<a name="line.734"></a>
+<FONT color="green">735</FONT>       * @param intervalDurationMillis  The duration of the interval in<a name="line.735"></a>
+<FONT color="green">736</FONT>       *                                milliseconds.<a name="line.736"></a>
+<FONT color="green">737</FONT>       * @param ratePerSecond           The target rate per second.<a name="line.737"></a>
+<FONT color="green">738</FONT>       *<a name="line.738"></a>
+<FONT color="green">739</FONT>       * @return  The rate per interval, which will be at least 1.<a name="line.739"></a>
+<FONT color="green">740</FONT>       */<a name="line.740"></a>
+<FONT color="green">741</FONT>      static int calculatePerInterval(final long intervalDurationMillis,<a name="line.741"></a>
+<FONT color="green">742</FONT>                                      final double ratePerSecond)<a name="line.742"></a>
+<FONT color="green">743</FONT>      {<a name="line.743"></a>
+<FONT color="green">744</FONT>        final double intervalDurationSeconds = intervalDurationMillis / 1000.0;<a name="line.744"></a>
+<FONT color="green">745</FONT>        final double ratePerInterval = ratePerSecond * intervalDurationSeconds;<a name="line.745"></a>
+<FONT color="green">746</FONT>        return (int)Math.max(1, Math.round(ratePerInterval));<a name="line.746"></a>
+<FONT color="green">747</FONT>      }<a name="line.747"></a>
+<FONT color="green">748</FONT>    <a name="line.748"></a>
+<FONT color="green">749</FONT>    <a name="line.749"></a>
+<FONT color="green">750</FONT>    <a name="line.750"></a>
+<FONT color="green">751</FONT>      /**<a name="line.751"></a>
+<FONT color="green">752</FONT>       * This reads the header at the start of the file.  All blank lines and<a name="line.752"></a>
+<FONT color="green">753</FONT>       * comment lines will be ignored.  The end of the header will be signified by<a name="line.753"></a>
+<FONT color="green">754</FONT>       * a line containing only the text "END HEADER".  All non-blank, non-comment<a name="line.754"></a>
+<FONT color="green">755</FONT>       * lines in the header must be in the format "name=value", where there may be<a name="line.755"></a>
+<FONT color="green">756</FONT>       * zero or more spaces on either side of the equal sign, the name must not<a name="line.756"></a>
+<FONT color="green">757</FONT>       * contain either the space or the equal sign character, and the value must<a name="line.757"></a>
+<FONT color="green">758</FONT>       * not begin or end with a space.  Header lines must not contain partial-line<a name="line.758"></a>
+<FONT color="green">759</FONT>       * comments.<a name="line.759"></a>
+<FONT color="green">760</FONT>       *<a name="line.760"></a>
+<FONT color="green">761</FONT>       * @param  lines  The lines of input that include the header.<a name="line.761"></a>
+<FONT color="green">762</FONT>       *<a name="line.762"></a>
+<FONT color="green">763</FONT>       * @return  A map of key/value pairs extracted from the header.<a name="line.763"></a>
+<FONT color="green">764</FONT>       *<a name="line.764"></a>
+<FONT color="green">765</FONT>       * @throws  IllegalArgumentException  If a problem is encountered while<a name="line.765"></a>
+<FONT color="green">766</FONT>       *                                    parsing the header (e.g., a malformed<a name="line.766"></a>
+<FONT color="green">767</FONT>       *                                    header line is encountered, multiple<a name="line.767"></a>
+<FONT color="green">768</FONT>       *                                    headers have the same key, there is no<a name="line.768"></a>
+<FONT color="green">769</FONT>       *                                    end of header marker, etc.).<a name="line.769"></a>
+<FONT color="green">770</FONT>       */<a name="line.770"></a>
+<FONT color="green">771</FONT>      static Map&lt;String,String&gt; consumeHeader(final List&lt;String&gt; lines)<a name="line.771"></a>
+<FONT color="green">772</FONT>             throws IllegalArgumentException<a name="line.772"></a>
+<FONT color="green">773</FONT>      {<a name="line.773"></a>
+<FONT color="green">774</FONT>        // The header will look like this:<a name="line.774"></a>
+<FONT color="green">775</FONT>        // key1=value1<a name="line.775"></a>
+<FONT color="green">776</FONT>        // key2 = value2<a name="line.776"></a>
+<FONT color="green">777</FONT>        // END HEADER<a name="line.777"></a>
+<FONT color="green">778</FONT>        boolean endHeaderFound = false;<a name="line.778"></a>
+<FONT color="green">779</FONT>        final Map&lt;String,String&gt; headerMap = new LinkedHashMap&lt;String,String&gt;(3);<a name="line.779"></a>
+<FONT color="green">780</FONT>        final Iterator&lt;String&gt; lineIter = lines.iterator();<a name="line.780"></a>
+<FONT color="green">781</FONT>        while (lineIter.hasNext())<a name="line.781"></a>
+<FONT color="green">782</FONT>        {<a name="line.782"></a>
+<FONT color="green">783</FONT>          final String line = lineIter.next().trim();<a name="line.783"></a>
+<FONT color="green">784</FONT>          lineIter.remove();<a name="line.784"></a>
+<FONT color="green">785</FONT>    <a name="line.785"></a>
+<FONT color="green">786</FONT>          if ((line.length() == 0) ||<a name="line.786"></a>
+<FONT color="green">787</FONT>               line.startsWith(String.valueOf(COMMENT_START)))<a name="line.787"></a>
+<FONT color="green">788</FONT>          {<a name="line.788"></a>
+<FONT color="green">789</FONT>            continue;<a name="line.789"></a>
+<FONT color="green">790</FONT>          }<a name="line.790"></a>
+<FONT color="green">791</FONT>    <a name="line.791"></a>
+<FONT color="green">792</FONT>          if (line.equalsIgnoreCase(END_HEADER_TEXT))<a name="line.792"></a>
+<FONT color="green">793</FONT>          {<a name="line.793"></a>
+<FONT color="green">794</FONT>            endHeaderFound = true;<a name="line.794"></a>
+<FONT color="green">795</FONT>            break;<a name="line.795"></a>
+<FONT color="green">796</FONT>          }<a name="line.796"></a>
+<FONT color="green">797</FONT>    <a name="line.797"></a>
+<FONT color="green">798</FONT>          final int equalPos = line.indexOf('=');<a name="line.798"></a>
+<FONT color="green">799</FONT>          if (equalPos &lt; 0)<a name="line.799"></a>
+<FONT color="green">800</FONT>          {<a name="line.800"></a>
+<FONT color="green">801</FONT>            throw new IllegalArgumentException(<a name="line.801"></a>
+<FONT color="green">802</FONT>                 ERR_RATE_ADJUSTOR_HEADER_NO_EQUAL.get(line));<a name="line.802"></a>
+<FONT color="green">803</FONT>          }<a name="line.803"></a>
+<FONT color="green">804</FONT>    <a name="line.804"></a>
+<FONT color="green">805</FONT>          final String key = line.substring(0, equalPos).trim();<a name="line.805"></a>
+<FONT color="green">806</FONT>          if (key.length() == 0)<a name="line.806"></a>
+<FONT color="green">807</FONT>          {<a name="line.807"></a>
+<FONT color="green">808</FONT>            throw new IllegalArgumentException(<a name="line.808"></a>
+<FONT color="green">809</FONT>                 ERR_RATE_ADJUSTOR_HEADER_EMPTY_KEY.get(line));<a name="line.809"></a>
+<FONT color="green">810</FONT>          }<a name="line.810"></a>
+<FONT color="green">811</FONT>    <a name="line.811"></a>
+<FONT color="green">812</FONT>          final String newValue = line.substring(equalPos+1).trim();<a name="line.812"></a>
+<FONT color="green">813</FONT>          final String existingValue = headerMap.get(key);<a name="line.813"></a>
+<FONT color="green">814</FONT>          if (existingValue != null)<a name="line.814"></a>
+<FONT color="green">815</FONT>          {<a name="line.815"></a>
+<FONT color="green">816</FONT>            throw new IllegalArgumentException(<a name="line.816"></a>
+<FONT color="green">817</FONT>                 ERR_RATE_ADJUSTOR_DUPLICATE_HEADER_KEY.get(key, existingValue,<a name="line.817"></a>
+<FONT color="green">818</FONT>                      newValue));<a name="line.818"></a>
+<FONT color="green">819</FONT>          }<a name="line.819"></a>
+<FONT color="green">820</FONT>    <a name="line.820"></a>
+<FONT color="green">821</FONT>          headerMap.put(key, newValue);<a name="line.821"></a>
+<FONT color="green">822</FONT>        }<a name="line.822"></a>
+<FONT color="green">823</FONT>    <a name="line.823"></a>
+<FONT color="green">824</FONT>        if (! endHeaderFound)<a name="line.824"></a>
+<FONT color="green">825</FONT>        {<a name="line.825"></a>
+<FONT color="green">826</FONT>          // This means we iterated across all lines without finding the end header<a name="line.826"></a>
+<FONT color="green">827</FONT>          // marker.<a name="line.827"></a>
+<FONT color="green">828</FONT>          throw new IllegalArgumentException(<a name="line.828"></a>
+<FONT color="green">829</FONT>               ERR_RATE_ADJUSTOR_NO_END_HEADER_FOUND.get(END_HEADER_TEXT));<a name="line.829"></a>
+<FONT color="green">830</FONT>        }<a name="line.830"></a>
+<FONT color="green">831</FONT>    <a name="line.831"></a>
+<FONT color="green">832</FONT>        return headerMap;<a name="line.832"></a>
+<FONT color="green">833</FONT>      }<a name="line.833"></a>
+<FONT color="green">834</FONT>    <a name="line.834"></a>
+<FONT color="green">835</FONT>    <a name="line.835"></a>
+<FONT color="green">836</FONT>    <a name="line.836"></a>
+<FONT color="green">837</FONT>      /**<a name="line.837"></a>
+<FONT color="green">838</FONT>       * Returns a list of the lines read from the specified Reader.<a name="line.838"></a>
+<FONT color="green">839</FONT>       *<a name="line.839"></a>
+<FONT color="green">840</FONT>       * @param  reader  The Reader to read from.<a name="line.840"></a>
+<FONT color="green">841</FONT>       *<a name="line.841"></a>
+<FONT color="green">842</FONT>       * @return  A list of the lines read from the specified Reader.<a name="line.842"></a>
+<FONT color="green">843</FONT>       *<a name="line.843"></a>
+<FONT color="green">844</FONT>       * @throws  IOException  If there is a problem reading from the Reader.<a name="line.844"></a>
+<FONT color="green">845</FONT>       */<a name="line.845"></a>
+<FONT color="green">846</FONT>      private static List&lt;String&gt; readLines(final Reader reader) throws IOException<a name="line.846"></a>
+<FONT color="green">847</FONT>      {<a name="line.847"></a>
+<FONT color="green">848</FONT>        final BufferedReader bufferedReader = new BufferedReader(reader);<a name="line.848"></a>
+<FONT color="green">849</FONT>    <a name="line.849"></a>
+<FONT color="green">850</FONT>        // We remove items from the front of the list, so a linked list works best.<a name="line.850"></a>
+<FONT color="green">851</FONT>        final List&lt;String&gt; lines = new LinkedList&lt;String&gt;();<a name="line.851"></a>
+<FONT color="green">852</FONT>    <a name="line.852"></a>
+<FONT color="green">853</FONT>        String line;<a name="line.853"></a>
+<FONT color="green">854</FONT>        while ((line = bufferedReader.readLine()) != null)<a name="line.854"></a>
+<FONT color="green">855</FONT>        {<a name="line.855"></a>
+<FONT color="green">856</FONT>          lines.add(line);<a name="line.856"></a>
+<FONT color="green">857</FONT>        }<a name="line.857"></a>
+<FONT color="green">858</FONT>    <a name="line.858"></a>
+<FONT color="green">859</FONT>        return lines;<a name="line.859"></a>
+<FONT color="green">860</FONT>      }<a name="line.860"></a>
+<FONT color="green">861</FONT>    }<a name="line.861"></a>
+<FONT color="green">862</FONT>    <a name="line.862"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

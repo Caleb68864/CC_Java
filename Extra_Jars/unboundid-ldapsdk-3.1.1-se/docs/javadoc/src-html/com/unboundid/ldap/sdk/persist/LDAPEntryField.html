@@ -1,0 +1,115 @@
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    /*<a name="line.1"></a>
+<FONT color="green">002</FONT>     * Copyright 2009-2016 UnboundID Corp.<a name="line.2"></a>
+<FONT color="green">003</FONT>     * All Rights Reserved.<a name="line.3"></a>
+<FONT color="green">004</FONT>     */<a name="line.4"></a>
+<FONT color="green">005</FONT>    /*<a name="line.5"></a>
+<FONT color="green">006</FONT>     * Copyright (C) 2009-2016 UnboundID Corp.<a name="line.6"></a>
+<FONT color="green">007</FONT>     *<a name="line.7"></a>
+<FONT color="green">008</FONT>     * This program is free software; you can redistribute it and/or modify<a name="line.8"></a>
+<FONT color="green">009</FONT>     * it under the terms of the GNU General Public License (GPLv2 only)<a name="line.9"></a>
+<FONT color="green">010</FONT>     * or the terms of the GNU Lesser General Public License (LGPLv2.1 only)<a name="line.10"></a>
+<FONT color="green">011</FONT>     * as published by the Free Software Foundation.<a name="line.11"></a>
+<FONT color="green">012</FONT>     *<a name="line.12"></a>
+<FONT color="green">013</FONT>     * This program is distributed in the hope that it will be useful,<a name="line.13"></a>
+<FONT color="green">014</FONT>     * but WITHOUT ANY WARRANTY; without even the implied warranty of<a name="line.14"></a>
+<FONT color="green">015</FONT>     * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the<a name="line.15"></a>
+<FONT color="green">016</FONT>     * GNU General Public License for more details.<a name="line.16"></a>
+<FONT color="green">017</FONT>     *<a name="line.17"></a>
+<FONT color="green">018</FONT>     * You should have received a copy of the GNU General Public License<a name="line.18"></a>
+<FONT color="green">019</FONT>     * along with this program; if not, see &lt;http://www.gnu.org/licenses&gt;.<a name="line.19"></a>
+<FONT color="green">020</FONT>     */<a name="line.20"></a>
+<FONT color="green">021</FONT>    package com.unboundid.ldap.sdk.persist;<a name="line.21"></a>
+<FONT color="green">022</FONT>    <a name="line.22"></a>
+<FONT color="green">023</FONT>    <a name="line.23"></a>
+<FONT color="green">024</FONT>    <a name="line.24"></a>
+<FONT color="green">025</FONT>    import java.lang.annotation.ElementType;<a name="line.25"></a>
+<FONT color="green">026</FONT>    import java.lang.annotation.Documented;<a name="line.26"></a>
+<FONT color="green">027</FONT>    import java.lang.annotation.Retention;<a name="line.27"></a>
+<FONT color="green">028</FONT>    import java.lang.annotation.RetentionPolicy;<a name="line.28"></a>
+<FONT color="green">029</FONT>    import java.lang.annotation.Target;<a name="line.29"></a>
+<FONT color="green">030</FONT>    <a name="line.30"></a>
+<FONT color="green">031</FONT>    <a name="line.31"></a>
+<FONT color="green">032</FONT>    <a name="line.32"></a>
+<FONT color="green">033</FONT>    /**<a name="line.33"></a>
+<FONT color="green">034</FONT>     * This annotation type may be used to mark a field whose value should be the<a name="line.34"></a>
+<FONT color="green">035</FONT>     * full entry from which the corresponding object was initialized.  This<a name="line.35"></a>
+<FONT color="green">036</FONT>     * annotation type should only be used for at most one field in a given class,<a name="line.36"></a>
+<FONT color="green">037</FONT>     * and that class must be marked with the {@link LDAPObject} annotation type.<a name="line.37"></a>
+<FONT color="green">038</FONT>     * The field marked with this annotation type must have a type of<a name="line.38"></a>
+<FONT color="green">039</FONT>     * {@link com.unboundid.ldap.sdk.ReadOnlyEntry}.  Objects which may be altered<a name="line.39"></a>
+<FONT color="green">040</FONT>     * using modify operations through the persistence framework should contain a<a name="line.40"></a>
+<FONT color="green">041</FONT>     * field with this annotation to make it possible to accurately determine<a name="line.41"></a>
+<FONT color="green">042</FONT>     * exactly what changes need to be made to the entry in the directory.<a name="line.42"></a>
+<FONT color="green">043</FONT>     */<a name="line.43"></a>
+<FONT color="green">044</FONT>    @Documented()<a name="line.44"></a>
+<FONT color="green">045</FONT>    @Retention(RetentionPolicy.RUNTIME)<a name="line.45"></a>
+<FONT color="green">046</FONT>    @Target(value={ElementType.FIELD})<a name="line.46"></a>
+<FONT color="green">047</FONT>    public @interface LDAPEntryField<a name="line.47"></a>
+<FONT color="green">048</FONT>    {<a name="line.48"></a>
+<FONT color="green">049</FONT>    }<a name="line.49"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

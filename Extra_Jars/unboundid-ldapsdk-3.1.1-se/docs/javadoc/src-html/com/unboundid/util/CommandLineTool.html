@@ -1,0 +1,1042 @@
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    /*<a name="line.1"></a>
+<FONT color="green">002</FONT>     * Copyright 2008-2016 UnboundID Corp.<a name="line.2"></a>
+<FONT color="green">003</FONT>     * All Rights Reserved.<a name="line.3"></a>
+<FONT color="green">004</FONT>     */<a name="line.4"></a>
+<FONT color="green">005</FONT>    /*<a name="line.5"></a>
+<FONT color="green">006</FONT>     * Copyright (C) 2008-2016 UnboundID Corp.<a name="line.6"></a>
+<FONT color="green">007</FONT>     *<a name="line.7"></a>
+<FONT color="green">008</FONT>     * This program is free software; you can redistribute it and/or modify<a name="line.8"></a>
+<FONT color="green">009</FONT>     * it under the terms of the GNU General Public License (GPLv2 only)<a name="line.9"></a>
+<FONT color="green">010</FONT>     * or the terms of the GNU Lesser General Public License (LGPLv2.1 only)<a name="line.10"></a>
+<FONT color="green">011</FONT>     * as published by the Free Software Foundation.<a name="line.11"></a>
+<FONT color="green">012</FONT>     *<a name="line.12"></a>
+<FONT color="green">013</FONT>     * This program is distributed in the hope that it will be useful,<a name="line.13"></a>
+<FONT color="green">014</FONT>     * but WITHOUT ANY WARRANTY; without even the implied warranty of<a name="line.14"></a>
+<FONT color="green">015</FONT>     * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the<a name="line.15"></a>
+<FONT color="green">016</FONT>     * GNU General Public License for more details.<a name="line.16"></a>
+<FONT color="green">017</FONT>     *<a name="line.17"></a>
+<FONT color="green">018</FONT>     * You should have received a copy of the GNU General Public License<a name="line.18"></a>
+<FONT color="green">019</FONT>     * along with this program; if not, see &lt;http://www.gnu.org/licenses&gt;.<a name="line.19"></a>
+<FONT color="green">020</FONT>     */<a name="line.20"></a>
+<FONT color="green">021</FONT>    package com.unboundid.util;<a name="line.21"></a>
+<FONT color="green">022</FONT>    <a name="line.22"></a>
+<FONT color="green">023</FONT>    <a name="line.23"></a>
+<FONT color="green">024</FONT>    <a name="line.24"></a>
+<FONT color="green">025</FONT>    import java.io.File;<a name="line.25"></a>
+<FONT color="green">026</FONT>    import java.io.OutputStream;<a name="line.26"></a>
+<FONT color="green">027</FONT>    import java.io.PrintStream;<a name="line.27"></a>
+<FONT color="green">028</FONT>    import java.util.Collections;<a name="line.28"></a>
+<FONT color="green">029</FONT>    import java.util.LinkedHashMap;<a name="line.29"></a>
+<FONT color="green">030</FONT>    import java.util.LinkedHashSet;<a name="line.30"></a>
+<FONT color="green">031</FONT>    import java.util.Map;<a name="line.31"></a>
+<FONT color="green">032</FONT>    import java.util.Set;<a name="line.32"></a>
+<FONT color="green">033</FONT>    import java.util.concurrent.atomic.AtomicReference;<a name="line.33"></a>
+<FONT color="green">034</FONT>    <a name="line.34"></a>
+<FONT color="green">035</FONT>    import com.unboundid.ldap.sdk.LDAPException;<a name="line.35"></a>
+<FONT color="green">036</FONT>    import com.unboundid.ldap.sdk.ResultCode;<a name="line.36"></a>
+<FONT color="green">037</FONT>    import com.unboundid.util.args.ArgumentException;<a name="line.37"></a>
+<FONT color="green">038</FONT>    import com.unboundid.util.args.ArgumentParser;<a name="line.38"></a>
+<FONT color="green">039</FONT>    import com.unboundid.util.args.BooleanArgument;<a name="line.39"></a>
+<FONT color="green">040</FONT>    <a name="line.40"></a>
+<FONT color="green">041</FONT>    import static com.unboundid.util.Debug.*;<a name="line.41"></a>
+<FONT color="green">042</FONT>    import static com.unboundid.util.StaticUtils.*;<a name="line.42"></a>
+<FONT color="green">043</FONT>    import static com.unboundid.util.UtilityMessages.*;<a name="line.43"></a>
+<FONT color="green">044</FONT>    <a name="line.44"></a>
+<FONT color="green">045</FONT>    <a name="line.45"></a>
+<FONT color="green">046</FONT>    <a name="line.46"></a>
+<FONT color="green">047</FONT>    /**<a name="line.47"></a>
+<FONT color="green">048</FONT>     * This class provides a framework for developing command-line tools that use<a name="line.48"></a>
+<FONT color="green">049</FONT>     * the argument parser provided as part of the UnboundID LDAP SDK for Java.<a name="line.49"></a>
+<FONT color="green">050</FONT>     * This tool adds a "-H" or "--help" option, which can be used to display usage<a name="line.50"></a>
+<FONT color="green">051</FONT>     * information for the program, and may also add a "-V" or "--version" option,<a name="line.51"></a>
+<FONT color="green">052</FONT>     * which can display the tool version.<a name="line.52"></a>
+<FONT color="green">053</FONT>     * &lt;BR&gt;&lt;BR&gt;<a name="line.53"></a>
+<FONT color="green">054</FONT>     * Subclasses should include their own {@code main} method that creates an<a name="line.54"></a>
+<FONT color="green">055</FONT>     * instance of a {@code CommandLineTool} and should invoke the<a name="line.55"></a>
+<FONT color="green">056</FONT>     * {@link CommandLineTool#runTool} method with the provided arguments.  For<a name="line.56"></a>
+<FONT color="green">057</FONT>     * example:<a name="line.57"></a>
+<FONT color="green">058</FONT>     * &lt;PRE&gt;<a name="line.58"></a>
+<FONT color="green">059</FONT>     *   public class ExampleCommandLineTool<a name="line.59"></a>
+<FONT color="green">060</FONT>     *          extends CommandLineTool<a name="line.60"></a>
+<FONT color="green">061</FONT>     *   {<a name="line.61"></a>
+<FONT color="green">062</FONT>     *     public static void main(String[] args)<a name="line.62"></a>
+<FONT color="green">063</FONT>     *     {<a name="line.63"></a>
+<FONT color="green">064</FONT>     *       ExampleCommandLineTool tool = new ExampleCommandLineTool();<a name="line.64"></a>
+<FONT color="green">065</FONT>     *       ResultCode resultCode = tool.runTool(args);<a name="line.65"></a>
+<FONT color="green">066</FONT>     *       if (resultCode != ResultCode.SUCCESS)<a name="line.66"></a>
+<FONT color="green">067</FONT>     *       {<a name="line.67"></a>
+<FONT color="green">068</FONT>     *         System.exit(resultCode.intValue());<a name="line.68"></a>
+<FONT color="green">069</FONT>     *       }<a name="line.69"></a>
+<FONT color="green">070</FONT>     *     |<a name="line.70"></a>
+<FONT color="green">071</FONT>     *<a name="line.71"></a>
+<FONT color="green">072</FONT>     *     public ExampleCommandLineTool()<a name="line.72"></a>
+<FONT color="green">073</FONT>     *     {<a name="line.73"></a>
+<FONT color="green">074</FONT>     *       super(System.out, System.err);<a name="line.74"></a>
+<FONT color="green">075</FONT>     *     }<a name="line.75"></a>
+<FONT color="green">076</FONT>     *<a name="line.76"></a>
+<FONT color="green">077</FONT>     *     // The rest of the tool implementation goes here.<a name="line.77"></a>
+<FONT color="green">078</FONT>     *     ...<a name="line.78"></a>
+<FONT color="green">079</FONT>     *   }<a name="line.79"></a>
+<FONT color="green">080</FONT>     * &lt;/PRE&gt;.<a name="line.80"></a>
+<FONT color="green">081</FONT>     * &lt;BR&gt;&lt;BR&gt;<a name="line.81"></a>
+<FONT color="green">082</FONT>     * Note that in general, methods in this class are not threadsafe.  However, the<a name="line.82"></a>
+<FONT color="green">083</FONT>     * {@link #out(Object...)} and {@link #err(Object...)} methods may be invoked<a name="line.83"></a>
+<FONT color="green">084</FONT>     * concurrently by any number of threads.<a name="line.84"></a>
+<FONT color="green">085</FONT>     */<a name="line.85"></a>
+<FONT color="green">086</FONT>    @Extensible()<a name="line.86"></a>
+<FONT color="green">087</FONT>    @ThreadSafety(level=ThreadSafetyLevel.INTERFACE_NOT_THREADSAFE)<a name="line.87"></a>
+<FONT color="green">088</FONT>    public abstract class CommandLineTool<a name="line.88"></a>
+<FONT color="green">089</FONT>    {<a name="line.89"></a>
+<FONT color="green">090</FONT>      // The print stream to use for messages written to standard output.<a name="line.90"></a>
+<FONT color="green">091</FONT>      private final PrintStream out;<a name="line.91"></a>
+<FONT color="green">092</FONT>    <a name="line.92"></a>
+<FONT color="green">093</FONT>      // The print stream to use for messages written to standard error.<a name="line.93"></a>
+<FONT color="green">094</FONT>      private final PrintStream err;<a name="line.94"></a>
+<FONT color="green">095</FONT>    <a name="line.95"></a>
+<FONT color="green">096</FONT>      // The argument used to request tool help.<a name="line.96"></a>
+<FONT color="green">097</FONT>      private BooleanArgument helpArgument = null;<a name="line.97"></a>
+<FONT color="green">098</FONT>    <a name="line.98"></a>
+<FONT color="green">099</FONT>      // The argument used to request help about SASL authentication.<a name="line.99"></a>
+<FONT color="green">100</FONT>      private BooleanArgument helpSASLArgument = null;<a name="line.100"></a>
+<FONT color="green">101</FONT>    <a name="line.101"></a>
+<FONT color="green">102</FONT>      // The argument used to request interactive mode.<a name="line.102"></a>
+<FONT color="green">103</FONT>      private BooleanArgument interactiveArgument = null;<a name="line.103"></a>
+<FONT color="green">104</FONT>    <a name="line.104"></a>
+<FONT color="green">105</FONT>      // The argument used to request the tool version.<a name="line.105"></a>
+<FONT color="green">106</FONT>      private BooleanArgument versionArgument = null;<a name="line.106"></a>
+<FONT color="green">107</FONT>    <a name="line.107"></a>
+<FONT color="green">108</FONT>    <a name="line.108"></a>
+<FONT color="green">109</FONT>    <a name="line.109"></a>
+<FONT color="green">110</FONT>      /**<a name="line.110"></a>
+<FONT color="green">111</FONT>       * Creates a new instance of this command-line tool with the provided<a name="line.111"></a>
+<FONT color="green">112</FONT>       * information.<a name="line.112"></a>
+<FONT color="green">113</FONT>       *<a name="line.113"></a>
+<FONT color="green">114</FONT>       * @param  outStream  The output stream to use for standard output.  It may be<a name="line.114"></a>
+<FONT color="green">115</FONT>       *                    {@code System.out} for the JVM's default standard output<a name="line.115"></a>
+<FONT color="green">116</FONT>       *                    stream, {@code null} if no output should be generated,<a name="line.116"></a>
+<FONT color="green">117</FONT>       *                    or a custom output stream if the output should be sent<a name="line.117"></a>
+<FONT color="green">118</FONT>       *                    to an alternate location.<a name="line.118"></a>
+<FONT color="green">119</FONT>       * @param  errStream  The output stream to use for standard error.  It may be<a name="line.119"></a>
+<FONT color="green">120</FONT>       *                    {@code System.err} for the JVM's default standard error<a name="line.120"></a>
+<FONT color="green">121</FONT>       *                    stream, {@code null} if no output should be generated,<a name="line.121"></a>
+<FONT color="green">122</FONT>       *                    or a custom output stream if the output should be sent<a name="line.122"></a>
+<FONT color="green">123</FONT>       *                    to an alternate location.<a name="line.123"></a>
+<FONT color="green">124</FONT>       */<a name="line.124"></a>
+<FONT color="green">125</FONT>      public CommandLineTool(final OutputStream outStream,<a name="line.125"></a>
+<FONT color="green">126</FONT>                             final OutputStream errStream)<a name="line.126"></a>
+<FONT color="green">127</FONT>      {<a name="line.127"></a>
+<FONT color="green">128</FONT>        if (outStream == null)<a name="line.128"></a>
+<FONT color="green">129</FONT>        {<a name="line.129"></a>
+<FONT color="green">130</FONT>          out = NullOutputStream.getPrintStream();<a name="line.130"></a>
+<FONT color="green">131</FONT>        }<a name="line.131"></a>
+<FONT color="green">132</FONT>        else<a name="line.132"></a>
+<FONT color="green">133</FONT>        {<a name="line.133"></a>
+<FONT color="green">134</FONT>          out = new PrintStream(outStream);<a name="line.134"></a>
+<FONT color="green">135</FONT>        }<a name="line.135"></a>
+<FONT color="green">136</FONT>    <a name="line.136"></a>
+<FONT color="green">137</FONT>        if (errStream == null)<a name="line.137"></a>
+<FONT color="green">138</FONT>        {<a name="line.138"></a>
+<FONT color="green">139</FONT>          err = NullOutputStream.getPrintStream();<a name="line.139"></a>
+<FONT color="green">140</FONT>        }<a name="line.140"></a>
+<FONT color="green">141</FONT>        else<a name="line.141"></a>
+<FONT color="green">142</FONT>        {<a name="line.142"></a>
+<FONT color="green">143</FONT>          err = new PrintStream(errStream);<a name="line.143"></a>
+<FONT color="green">144</FONT>        }<a name="line.144"></a>
+<FONT color="green">145</FONT>      }<a name="line.145"></a>
+<FONT color="green">146</FONT>    <a name="line.146"></a>
+<FONT color="green">147</FONT>    <a name="line.147"></a>
+<FONT color="green">148</FONT>    <a name="line.148"></a>
+<FONT color="green">149</FONT>      /**<a name="line.149"></a>
+<FONT color="green">150</FONT>       * Performs all processing for this command-line tool.  This includes:<a name="line.150"></a>
+<FONT color="green">151</FONT>       * &lt;UL&gt;<a name="line.151"></a>
+<FONT color="green">152</FONT>       *   &lt;LI&gt;Creating the argument parser and populating it using the<a name="line.152"></a>
+<FONT color="green">153</FONT>       *       {@link #addToolArguments} method.&lt;/LI&gt;<a name="line.153"></a>
+<FONT color="green">154</FONT>       *   &lt;LI&gt;Parsing the provided set of command line arguments, including any<a name="line.154"></a>
+<FONT color="green">155</FONT>       *       additional validation using the {@link #doExtendedArgumentValidation}<a name="line.155"></a>
+<FONT color="green">156</FONT>       *       method.&lt;/LI&gt;<a name="line.156"></a>
+<FONT color="green">157</FONT>       *   &lt;LI&gt;Invoking the {@link #doToolProcessing} method to do the appropriate<a name="line.157"></a>
+<FONT color="green">158</FONT>       *       work for this tool.&lt;/LI&gt;<a name="line.158"></a>
+<FONT color="green">159</FONT>       * &lt;/UL&gt;<a name="line.159"></a>
+<FONT color="green">160</FONT>       *<a name="line.160"></a>
+<FONT color="green">161</FONT>       * @param  args  The command-line arguments provided to this program.<a name="line.161"></a>
+<FONT color="green">162</FONT>       *<a name="line.162"></a>
+<FONT color="green">163</FONT>       * @return  The result of processing this tool.  It should be<a name="line.163"></a>
+<FONT color="green">164</FONT>       *          {@link ResultCode#SUCCESS} if the tool completed its work<a name="line.164"></a>
+<FONT color="green">165</FONT>       *          successfully, or some other result if a problem occurred.<a name="line.165"></a>
+<FONT color="green">166</FONT>       */<a name="line.166"></a>
+<FONT color="green">167</FONT>      public final ResultCode runTool(final String... args)<a name="line.167"></a>
+<FONT color="green">168</FONT>      {<a name="line.168"></a>
+<FONT color="green">169</FONT>        try<a name="line.169"></a>
+<FONT color="green">170</FONT>        {<a name="line.170"></a>
+<FONT color="green">171</FONT>          final ArgumentParser parser = createArgumentParser();<a name="line.171"></a>
+<FONT color="green">172</FONT>          if (supportsInteractiveMode() &amp;&amp; defaultsToInteractiveMode() &amp;&amp;<a name="line.172"></a>
+<FONT color="green">173</FONT>              ((args == null) || (args.length == 0)))<a name="line.173"></a>
+<FONT color="green">174</FONT>          {<a name="line.174"></a>
+<FONT color="green">175</FONT>            // We'll skip argument parsing in this case because no arguments were<a name="line.175"></a>
+<FONT color="green">176</FONT>            // provided, and the tool may not allow no arguments to be provided in<a name="line.176"></a>
+<FONT color="green">177</FONT>            // non-interactive mode.<a name="line.177"></a>
+<FONT color="green">178</FONT>          }<a name="line.178"></a>
+<FONT color="green">179</FONT>          else<a name="line.179"></a>
+<FONT color="green">180</FONT>          {<a name="line.180"></a>
+<FONT color="green">181</FONT>            parser.parse(args);<a name="line.181"></a>
+<FONT color="green">182</FONT>          }<a name="line.182"></a>
+<FONT color="green">183</FONT>    <a name="line.183"></a>
+<FONT color="green">184</FONT>          final File generatedPropertiesFile = parser.getGeneratedPropertiesFile();<a name="line.184"></a>
+<FONT color="green">185</FONT>          if (supportsPropertiesFile() &amp;&amp; (generatedPropertiesFile != null))<a name="line.185"></a>
+<FONT color="green">186</FONT>          {<a name="line.186"></a>
+<FONT color="green">187</FONT>            wrapOut(0, StaticUtils.TERMINAL_WIDTH_COLUMNS - 1,<a name="line.187"></a>
+<FONT color="green">188</FONT>                 INFO_CL_TOOL_WROTE_PROPERTIES_FILE.get(<a name="line.188"></a>
+<FONT color="green">189</FONT>                      generatedPropertiesFile.getAbsolutePath()));<a name="line.189"></a>
+<FONT color="green">190</FONT>            return ResultCode.SUCCESS;<a name="line.190"></a>
+<FONT color="green">191</FONT>          }<a name="line.191"></a>
+<FONT color="green">192</FONT>    <a name="line.192"></a>
+<FONT color="green">193</FONT>          if (helpArgument.isPresent())<a name="line.193"></a>
+<FONT color="green">194</FONT>          {<a name="line.194"></a>
+<FONT color="green">195</FONT>            out(parser.getUsageString(StaticUtils.TERMINAL_WIDTH_COLUMNS - 1));<a name="line.195"></a>
+<FONT color="green">196</FONT>            displayExampleUsages();<a name="line.196"></a>
+<FONT color="green">197</FONT>            return ResultCode.SUCCESS;<a name="line.197"></a>
+<FONT color="green">198</FONT>          }<a name="line.198"></a>
+<FONT color="green">199</FONT>    <a name="line.199"></a>
+<FONT color="green">200</FONT>          if ((helpSASLArgument != null) &amp;&amp; helpSASLArgument.isPresent())<a name="line.200"></a>
+<FONT color="green">201</FONT>          {<a name="line.201"></a>
+<FONT color="green">202</FONT>            out(SASLUtils.getUsageString(StaticUtils.TERMINAL_WIDTH_COLUMNS - 1));<a name="line.202"></a>
+<FONT color="green">203</FONT>            return ResultCode.SUCCESS;<a name="line.203"></a>
+<FONT color="green">204</FONT>          }<a name="line.204"></a>
+<FONT color="green">205</FONT>    <a name="line.205"></a>
+<FONT color="green">206</FONT>          if ((versionArgument != null) &amp;&amp; versionArgument.isPresent())<a name="line.206"></a>
+<FONT color="green">207</FONT>          {<a name="line.207"></a>
+<FONT color="green">208</FONT>            out(getToolVersion());<a name="line.208"></a>
+<FONT color="green">209</FONT>            return ResultCode.SUCCESS;<a name="line.209"></a>
+<FONT color="green">210</FONT>          }<a name="line.210"></a>
+<FONT color="green">211</FONT>    <a name="line.211"></a>
+<FONT color="green">212</FONT>          boolean extendedValidationDone = false;<a name="line.212"></a>
+<FONT color="green">213</FONT>          if (interactiveArgument != null)<a name="line.213"></a>
+<FONT color="green">214</FONT>          {<a name="line.214"></a>
+<FONT color="green">215</FONT>            if (interactiveArgument.isPresent() ||<a name="line.215"></a>
+<FONT color="green">216</FONT>                (defaultsToInteractiveMode() &amp;&amp;<a name="line.216"></a>
+<FONT color="green">217</FONT>                 ((args == null) || (args.length == 0))))<a name="line.217"></a>
+<FONT color="green">218</FONT>            {<a name="line.218"></a>
+<FONT color="green">219</FONT>              final CommandLineToolInteractiveModeProcessor interactiveProcessor =<a name="line.219"></a>
+<FONT color="green">220</FONT>                   new CommandLineToolInteractiveModeProcessor(this, parser);<a name="line.220"></a>
+<FONT color="green">221</FONT>              try<a name="line.221"></a>
+<FONT color="green">222</FONT>              {<a name="line.222"></a>
+<FONT color="green">223</FONT>                interactiveProcessor.doInteractiveModeProcessing();<a name="line.223"></a>
+<FONT color="green">224</FONT>                extendedValidationDone = true;<a name="line.224"></a>
+<FONT color="green">225</FONT>              }<a name="line.225"></a>
+<FONT color="green">226</FONT>              catch (final LDAPException le)<a name="line.226"></a>
+<FONT color="green">227</FONT>              {<a name="line.227"></a>
+<FONT color="green">228</FONT>                debugException(le);<a name="line.228"></a>
+<FONT color="green">229</FONT>    <a name="line.229"></a>
+<FONT color="green">230</FONT>                final String message = le.getMessage();<a name="line.230"></a>
+<FONT color="green">231</FONT>                if ((message != null) &amp;&amp; (message.length() &gt; 0))<a name="line.231"></a>
+<FONT color="green">232</FONT>                {<a name="line.232"></a>
+<FONT color="green">233</FONT>                  err(message);<a name="line.233"></a>
+<FONT color="green">234</FONT>                }<a name="line.234"></a>
+<FONT color="green">235</FONT>    <a name="line.235"></a>
+<FONT color="green">236</FONT>                return le.getResultCode();<a name="line.236"></a>
+<FONT color="green">237</FONT>              }<a name="line.237"></a>
+<FONT color="green">238</FONT>            }<a name="line.238"></a>
+<FONT color="green">239</FONT>          }<a name="line.239"></a>
+<FONT color="green">240</FONT>    <a name="line.240"></a>
+<FONT color="green">241</FONT>          if (! extendedValidationDone)<a name="line.241"></a>
+<FONT color="green">242</FONT>          {<a name="line.242"></a>
+<FONT color="green">243</FONT>            doExtendedArgumentValidation();<a name="line.243"></a>
+<FONT color="green">244</FONT>          }<a name="line.244"></a>
+<FONT color="green">245</FONT>        }<a name="line.245"></a>
+<FONT color="green">246</FONT>        catch (ArgumentException ae)<a name="line.246"></a>
+<FONT color="green">247</FONT>        {<a name="line.247"></a>
+<FONT color="green">248</FONT>          debugException(ae);<a name="line.248"></a>
+<FONT color="green">249</FONT>          err(ae.getMessage());<a name="line.249"></a>
+<FONT color="green">250</FONT>          return ResultCode.PARAM_ERROR;<a name="line.250"></a>
+<FONT color="green">251</FONT>        }<a name="line.251"></a>
+<FONT color="green">252</FONT>    <a name="line.252"></a>
+<FONT color="green">253</FONT>    <a name="line.253"></a>
+<FONT color="green">254</FONT>        final AtomicReference&lt;ResultCode&gt; exitCode =<a name="line.254"></a>
+<FONT color="green">255</FONT>             new AtomicReference&lt;ResultCode&gt;();<a name="line.255"></a>
+<FONT color="green">256</FONT>        if (registerShutdownHook())<a name="line.256"></a>
+<FONT color="green">257</FONT>        {<a name="line.257"></a>
+<FONT color="green">258</FONT>          final CommandLineToolShutdownHook shutdownHook =<a name="line.258"></a>
+<FONT color="green">259</FONT>               new CommandLineToolShutdownHook(this, exitCode);<a name="line.259"></a>
+<FONT color="green">260</FONT>          Runtime.getRuntime().addShutdownHook(shutdownHook);<a name="line.260"></a>
+<FONT color="green">261</FONT>        }<a name="line.261"></a>
+<FONT color="green">262</FONT>    <a name="line.262"></a>
+<FONT color="green">263</FONT>        try<a name="line.263"></a>
+<FONT color="green">264</FONT>        {<a name="line.264"></a>
+<FONT color="green">265</FONT>          exitCode.set(doToolProcessing());<a name="line.265"></a>
+<FONT color="green">266</FONT>        }<a name="line.266"></a>
+<FONT color="green">267</FONT>        catch (Exception e)<a name="line.267"></a>
+<FONT color="green">268</FONT>        {<a name="line.268"></a>
+<FONT color="green">269</FONT>          debugException(e);<a name="line.269"></a>
+<FONT color="green">270</FONT>          err(getExceptionMessage(e));<a name="line.270"></a>
+<FONT color="green">271</FONT>          exitCode.set(ResultCode.LOCAL_ERROR);<a name="line.271"></a>
+<FONT color="green">272</FONT>        }<a name="line.272"></a>
+<FONT color="green">273</FONT>    <a name="line.273"></a>
+<FONT color="green">274</FONT>        return exitCode.get();<a name="line.274"></a>
+<FONT color="green">275</FONT>      }<a name="line.275"></a>
+<FONT color="green">276</FONT>    <a name="line.276"></a>
+<FONT color="green">277</FONT>    <a name="line.277"></a>
+<FONT color="green">278</FONT>    <a name="line.278"></a>
+<FONT color="green">279</FONT>      /**<a name="line.279"></a>
+<FONT color="green">280</FONT>       * Writes example usage information for this tool to the standard output<a name="line.280"></a>
+<FONT color="green">281</FONT>       * stream.<a name="line.281"></a>
+<FONT color="green">282</FONT>       */<a name="line.282"></a>
+<FONT color="green">283</FONT>      private void displayExampleUsages()<a name="line.283"></a>
+<FONT color="green">284</FONT>      {<a name="line.284"></a>
+<FONT color="green">285</FONT>        final LinkedHashMap&lt;String[],String&gt; examples = getExampleUsages();<a name="line.285"></a>
+<FONT color="green">286</FONT>        if ((examples == null) || examples.isEmpty())<a name="line.286"></a>
+<FONT color="green">287</FONT>        {<a name="line.287"></a>
+<FONT color="green">288</FONT>          return;<a name="line.288"></a>
+<FONT color="green">289</FONT>        }<a name="line.289"></a>
+<FONT color="green">290</FONT>    <a name="line.290"></a>
+<FONT color="green">291</FONT>        out(INFO_CL_TOOL_LABEL_EXAMPLES);<a name="line.291"></a>
+<FONT color="green">292</FONT>    <a name="line.292"></a>
+<FONT color="green">293</FONT>        final int wrapWidth = StaticUtils.TERMINAL_WIDTH_COLUMNS - 1;<a name="line.293"></a>
+<FONT color="green">294</FONT>        for (final Map.Entry&lt;String[],String&gt; e : examples.entrySet())<a name="line.294"></a>
+<FONT color="green">295</FONT>        {<a name="line.295"></a>
+<FONT color="green">296</FONT>          out();<a name="line.296"></a>
+<FONT color="green">297</FONT>          wrapOut(2, wrapWidth, e.getValue());<a name="line.297"></a>
+<FONT color="green">298</FONT>          out();<a name="line.298"></a>
+<FONT color="green">299</FONT>    <a name="line.299"></a>
+<FONT color="green">300</FONT>          final StringBuilder buffer = new StringBuilder();<a name="line.300"></a>
+<FONT color="green">301</FONT>          buffer.append("    ");<a name="line.301"></a>
+<FONT color="green">302</FONT>          buffer.append(getToolName());<a name="line.302"></a>
+<FONT color="green">303</FONT>    <a name="line.303"></a>
+<FONT color="green">304</FONT>          final String[] args = e.getKey();<a name="line.304"></a>
+<FONT color="green">305</FONT>          for (int i=0; i &lt; args.length; i++)<a name="line.305"></a>
+<FONT color="green">306</FONT>          {<a name="line.306"></a>
+<FONT color="green">307</FONT>            buffer.append(' ');<a name="line.307"></a>
+<FONT color="green">308</FONT>    <a name="line.308"></a>
+<FONT color="green">309</FONT>            // If the argument has a value, then make sure to keep it on the same<a name="line.309"></a>
+<FONT color="green">310</FONT>            // line as the argument name.  This may introduce false positives due to<a name="line.310"></a>
+<FONT color="green">311</FONT>            // unnamed trailing arguments, but the worst that will happen that case<a name="line.311"></a>
+<FONT color="green">312</FONT>            // is that the output may be wrapped earlier than necessary one time.<a name="line.312"></a>
+<FONT color="green">313</FONT>            String arg = args[i];<a name="line.313"></a>
+<FONT color="green">314</FONT>            if (arg.startsWith("-"))<a name="line.314"></a>
+<FONT color="green">315</FONT>            {<a name="line.315"></a>
+<FONT color="green">316</FONT>              if ((i &lt; (args.length - 1)) &amp;&amp; (! args[i+1].startsWith("-")))<a name="line.316"></a>
+<FONT color="green">317</FONT>              {<a name="line.317"></a>
+<FONT color="green">318</FONT>                ExampleCommandLineArgument cleanArg =<a name="line.318"></a>
+<FONT color="green">319</FONT>                    ExampleCommandLineArgument.getCleanArgument(args[i+1]);<a name="line.319"></a>
+<FONT color="green">320</FONT>                arg += ' ' + cleanArg.getLocalForm();<a name="line.320"></a>
+<FONT color="green">321</FONT>                i++;<a name="line.321"></a>
+<FONT color="green">322</FONT>              }<a name="line.322"></a>
+<FONT color="green">323</FONT>            }<a name="line.323"></a>
+<FONT color="green">324</FONT>            else<a name="line.324"></a>
+<FONT color="green">325</FONT>            {<a name="line.325"></a>
+<FONT color="green">326</FONT>              ExampleCommandLineArgument cleanArg =<a name="line.326"></a>
+<FONT color="green">327</FONT>                  ExampleCommandLineArgument.getCleanArgument(arg);<a name="line.327"></a>
+<FONT color="green">328</FONT>              arg = cleanArg.getLocalForm();<a name="line.328"></a>
+<FONT color="green">329</FONT>            }<a name="line.329"></a>
+<FONT color="green">330</FONT>    <a name="line.330"></a>
+<FONT color="green">331</FONT>            if ((buffer.length() + arg.length() + 2) &lt; wrapWidth)<a name="line.331"></a>
+<FONT color="green">332</FONT>            {<a name="line.332"></a>
+<FONT color="green">333</FONT>              buffer.append(arg);<a name="line.333"></a>
+<FONT color="green">334</FONT>            }<a name="line.334"></a>
+<FONT color="green">335</FONT>            else<a name="line.335"></a>
+<FONT color="green">336</FONT>            {<a name="line.336"></a>
+<FONT color="green">337</FONT>              buffer.append('\\');<a name="line.337"></a>
+<FONT color="green">338</FONT>              out(buffer.toString());<a name="line.338"></a>
+<FONT color="green">339</FONT>              buffer.setLength(0);<a name="line.339"></a>
+<FONT color="green">340</FONT>              buffer.append("         ");<a name="line.340"></a>
+<FONT color="green">341</FONT>              buffer.append(arg);<a name="line.341"></a>
+<FONT color="green">342</FONT>            }<a name="line.342"></a>
+<FONT color="green">343</FONT>          }<a name="line.343"></a>
+<FONT color="green">344</FONT>    <a name="line.344"></a>
+<FONT color="green">345</FONT>          out(buffer.toString());<a name="line.345"></a>
+<FONT color="green">346</FONT>        }<a name="line.346"></a>
+<FONT color="green">347</FONT>      }<a name="line.347"></a>
+<FONT color="green">348</FONT>    <a name="line.348"></a>
+<FONT color="green">349</FONT>    <a name="line.349"></a>
+<FONT color="green">350</FONT>    <a name="line.350"></a>
+<FONT color="green">351</FONT>      /**<a name="line.351"></a>
+<FONT color="green">352</FONT>       * Retrieves the name of this tool.  It should be the name of the command used<a name="line.352"></a>
+<FONT color="green">353</FONT>       * to invoke this tool.<a name="line.353"></a>
+<FONT color="green">354</FONT>       *<a name="line.354"></a>
+<FONT color="green">355</FONT>       * @return  The name for this tool.<a name="line.355"></a>
+<FONT color="green">356</FONT>       */<a name="line.356"></a>
+<FONT color="green">357</FONT>      public abstract String getToolName();<a name="line.357"></a>
+<FONT color="green">358</FONT>    <a name="line.358"></a>
+<FONT color="green">359</FONT>    <a name="line.359"></a>
+<FONT color="green">360</FONT>    <a name="line.360"></a>
+<FONT color="green">361</FONT>      /**<a name="line.361"></a>
+<FONT color="green">362</FONT>       * Retrieves a human-readable description for this tool.<a name="line.362"></a>
+<FONT color="green">363</FONT>       *<a name="line.363"></a>
+<FONT color="green">364</FONT>       * @return  A human-readable description for this tool.<a name="line.364"></a>
+<FONT color="green">365</FONT>       */<a name="line.365"></a>
+<FONT color="green">366</FONT>      public abstract String getToolDescription();<a name="line.366"></a>
+<FONT color="green">367</FONT>    <a name="line.367"></a>
+<FONT color="green">368</FONT>    <a name="line.368"></a>
+<FONT color="green">369</FONT>    <a name="line.369"></a>
+<FONT color="green">370</FONT>      /**<a name="line.370"></a>
+<FONT color="green">371</FONT>       * Retrieves a version string for this tool, if available.<a name="line.371"></a>
+<FONT color="green">372</FONT>       *<a name="line.372"></a>
+<FONT color="green">373</FONT>       * @return  A version string for this tool, or {@code null} if none is<a name="line.373"></a>
+<FONT color="green">374</FONT>       *          available.<a name="line.374"></a>
+<FONT color="green">375</FONT>       */<a name="line.375"></a>
+<FONT color="green">376</FONT>      public String getToolVersion()<a name="line.376"></a>
+<FONT color="green">377</FONT>      {<a name="line.377"></a>
+<FONT color="green">378</FONT>        return null;<a name="line.378"></a>
+<FONT color="green">379</FONT>      }<a name="line.379"></a>
+<FONT color="green">380</FONT>    <a name="line.380"></a>
+<FONT color="green">381</FONT>    <a name="line.381"></a>
+<FONT color="green">382</FONT>    <a name="line.382"></a>
+<FONT color="green">383</FONT>      /**<a name="line.383"></a>
+<FONT color="green">384</FONT>       * Retrieves the minimum number of unnamed trailing arguments that must be<a name="line.384"></a>
+<FONT color="green">385</FONT>       * provided for this tool.  If a tool requires the use of trailing arguments,<a name="line.385"></a>
+<FONT color="green">386</FONT>       * then it must override this method and the {@link #getMaxTrailingArguments}<a name="line.386"></a>
+<FONT color="green">387</FONT>       * arguments to return nonzero values, and it must also override the<a name="line.387"></a>
+<FONT color="green">388</FONT>       * {@link #getTrailingArgumentsPlaceholder} method to return a<a name="line.388"></a>
+<FONT color="green">389</FONT>       * non-{@code null} value.<a name="line.389"></a>
+<FONT color="green">390</FONT>       *<a name="line.390"></a>
+<FONT color="green">391</FONT>       * @return  The minimum number of unnamed trailing arguments that may be<a name="line.391"></a>
+<FONT color="green">392</FONT>       *          provided for this tool.  A value of zero indicates that the tool<a name="line.392"></a>
+<FONT color="green">393</FONT>       *          may be invoked without any trailing arguments.<a name="line.393"></a>
+<FONT color="green">394</FONT>       */<a name="line.394"></a>
+<FONT color="green">395</FONT>      public int getMinTrailingArguments()<a name="line.395"></a>
+<FONT color="green">396</FONT>      {<a name="line.396"></a>
+<FONT color="green">397</FONT>        return 0;<a name="line.397"></a>
+<FONT color="green">398</FONT>      }<a name="line.398"></a>
+<FONT color="green">399</FONT>    <a name="line.399"></a>
+<FONT color="green">400</FONT>    <a name="line.400"></a>
+<FONT color="green">401</FONT>    <a name="line.401"></a>
+<FONT color="green">402</FONT>      /**<a name="line.402"></a>
+<FONT color="green">403</FONT>       * Retrieves the maximum number of unnamed trailing arguments that may be<a name="line.403"></a>
+<FONT color="green">404</FONT>       * provided for this tool.  If a tool supports trailing arguments, then it<a name="line.404"></a>
+<FONT color="green">405</FONT>       * must override this method to return a nonzero value, and must also override<a name="line.405"></a>
+<FONT color="green">406</FONT>       * the {@link CommandLineTool#getTrailingArgumentsPlaceholder} method to<a name="line.406"></a>
+<FONT color="green">407</FONT>       * return a non-{@code null} value.<a name="line.407"></a>
+<FONT color="green">408</FONT>       *<a name="line.408"></a>
+<FONT color="green">409</FONT>       * @return  The maximum number of unnamed trailing arguments that may be<a name="line.409"></a>
+<FONT color="green">410</FONT>       *          provided for this tool.  A value of zero indicates that trailing<a name="line.410"></a>
+<FONT color="green">411</FONT>       *          arguments are not allowed.  A negative value indicates that there<a name="line.411"></a>
+<FONT color="green">412</FONT>       *          should be no limit on the number of trailing arguments.<a name="line.412"></a>
+<FONT color="green">413</FONT>       */<a name="line.413"></a>
+<FONT color="green">414</FONT>      public int getMaxTrailingArguments()<a name="line.414"></a>
+<FONT color="green">415</FONT>      {<a name="line.415"></a>
+<FONT color="green">416</FONT>        return 0;<a name="line.416"></a>
+<FONT color="green">417</FONT>      }<a name="line.417"></a>
+<FONT color="green">418</FONT>    <a name="line.418"></a>
+<FONT color="green">419</FONT>    <a name="line.419"></a>
+<FONT color="green">420</FONT>    <a name="line.420"></a>
+<FONT color="green">421</FONT>      /**<a name="line.421"></a>
+<FONT color="green">422</FONT>       * Retrieves a placeholder string that should be used for trailing arguments<a name="line.422"></a>
+<FONT color="green">423</FONT>       * in the usage information for this tool.<a name="line.423"></a>
+<FONT color="green">424</FONT>       *<a name="line.424"></a>
+<FONT color="green">425</FONT>       * @return  A placeholder string that should be used for trailing arguments in<a name="line.425"></a>
+<FONT color="green">426</FONT>       *          the usage information for this tool, or {@code null} if trailing<a name="line.426"></a>
+<FONT color="green">427</FONT>       *          arguments are not supported.<a name="line.427"></a>
+<FONT color="green">428</FONT>       */<a name="line.428"></a>
+<FONT color="green">429</FONT>      public String getTrailingArgumentsPlaceholder()<a name="line.429"></a>
+<FONT color="green">430</FONT>      {<a name="line.430"></a>
+<FONT color="green">431</FONT>        return null;<a name="line.431"></a>
+<FONT color="green">432</FONT>      }<a name="line.432"></a>
+<FONT color="green">433</FONT>    <a name="line.433"></a>
+<FONT color="green">434</FONT>    <a name="line.434"></a>
+<FONT color="green">435</FONT>    <a name="line.435"></a>
+<FONT color="green">436</FONT>      /**<a name="line.436"></a>
+<FONT color="green">437</FONT>       * Indicates whether this tool should provide support for an interactive mode,<a name="line.437"></a>
+<FONT color="green">438</FONT>       * in which the tool offers a mode in which the arguments can be provided in<a name="line.438"></a>
+<FONT color="green">439</FONT>       * a text-driven menu rather than requiring them to be given on the command<a name="line.439"></a>
+<FONT color="green">440</FONT>       * line.  If interactive mode is supported, it may be invoked using the<a name="line.440"></a>
+<FONT color="green">441</FONT>       * "--interactive" argument.  Alternately, if interactive mode is supported<a name="line.441"></a>
+<FONT color="green">442</FONT>       * and {@link #defaultsToInteractiveMode()} returns {@code true}, then<a name="line.442"></a>
+<FONT color="green">443</FONT>       * interactive mode may be invoked by simply launching the tool without any<a name="line.443"></a>
+<FONT color="green">444</FONT>       * arguments.<a name="line.444"></a>
+<FONT color="green">445</FONT>       *<a name="line.445"></a>
+<FONT color="green">446</FONT>       * @return  {@code true} if this tool supports interactive mode, or<a name="line.446"></a>
+<FONT color="green">447</FONT>       *          {@code false} if not.<a name="line.447"></a>
+<FONT color="green">448</FONT>       */<a name="line.448"></a>
+<FONT color="green">449</FONT>      public boolean supportsInteractiveMode()<a name="line.449"></a>
+<FONT color="green">450</FONT>      {<a name="line.450"></a>
+<FONT color="green">451</FONT>        return false;<a name="line.451"></a>
+<FONT color="green">452</FONT>      }<a name="line.452"></a>
+<FONT color="green">453</FONT>    <a name="line.453"></a>
+<FONT color="green">454</FONT>    <a name="line.454"></a>
+<FONT color="green">455</FONT>    <a name="line.455"></a>
+<FONT color="green">456</FONT>      /**<a name="line.456"></a>
+<FONT color="green">457</FONT>       * Indicates whether this tool defaults to launching in interactive mode if<a name="line.457"></a>
+<FONT color="green">458</FONT>       * the tool is invoked without any command-line arguments.  This will only be<a name="line.458"></a>
+<FONT color="green">459</FONT>       * used if {@link #supportsInteractiveMode()} returns {@code true}.<a name="line.459"></a>
+<FONT color="green">460</FONT>       *<a name="line.460"></a>
+<FONT color="green">461</FONT>       * @return  {@code true} if this tool defaults to using interactive mode if<a name="line.461"></a>
+<FONT color="green">462</FONT>       *          launched without any command-line arguments, or {@code false} if<a name="line.462"></a>
+<FONT color="green">463</FONT>       *          not.<a name="line.463"></a>
+<FONT color="green">464</FONT>       */<a name="line.464"></a>
+<FONT color="green">465</FONT>      public boolean defaultsToInteractiveMode()<a name="line.465"></a>
+<FONT color="green">466</FONT>      {<a name="line.466"></a>
+<FONT color="green">467</FONT>        return false;<a name="line.467"></a>
+<FONT color="green">468</FONT>      }<a name="line.468"></a>
+<FONT color="green">469</FONT>    <a name="line.469"></a>
+<FONT color="green">470</FONT>    <a name="line.470"></a>
+<FONT color="green">471</FONT>    <a name="line.471"></a>
+<FONT color="green">472</FONT>      /**<a name="line.472"></a>
+<FONT color="green">473</FONT>       * Indicates whether this tool supports the use of a properties file for<a name="line.473"></a>
+<FONT color="green">474</FONT>       * specifying default values for arguments that aren't specified on the<a name="line.474"></a>
+<FONT color="green">475</FONT>       * command line.<a name="line.475"></a>
+<FONT color="green">476</FONT>       *<a name="line.476"></a>
+<FONT color="green">477</FONT>       * @return  {@code true} if this tool supports the use of a properties file<a name="line.477"></a>
+<FONT color="green">478</FONT>       *          for specifying default values for arguments that aren't specified<a name="line.478"></a>
+<FONT color="green">479</FONT>       *          on the command line, or {@code false} if not.<a name="line.479"></a>
+<FONT color="green">480</FONT>       */<a name="line.480"></a>
+<FONT color="green">481</FONT>      public boolean supportsPropertiesFile()<a name="line.481"></a>
+<FONT color="green">482</FONT>      {<a name="line.482"></a>
+<FONT color="green">483</FONT>        return false;<a name="line.483"></a>
+<FONT color="green">484</FONT>      }<a name="line.484"></a>
+<FONT color="green">485</FONT>    <a name="line.485"></a>
+<FONT color="green">486</FONT>    <a name="line.486"></a>
+<FONT color="green">487</FONT>    <a name="line.487"></a>
+<FONT color="green">488</FONT>      /**<a name="line.488"></a>
+<FONT color="green">489</FONT>       * Creates a parser that can be used to to parse arguments accepted by<a name="line.489"></a>
+<FONT color="green">490</FONT>       * this tool.<a name="line.490"></a>
+<FONT color="green">491</FONT>       *<a name="line.491"></a>
+<FONT color="green">492</FONT>       * @return ArgumentParser that can be used to parse arguments for this<a name="line.492"></a>
+<FONT color="green">493</FONT>       *         tool.<a name="line.493"></a>
+<FONT color="green">494</FONT>       *<a name="line.494"></a>
+<FONT color="green">495</FONT>       * @throws ArgumentException  If there was a problem initializing the<a name="line.495"></a>
+<FONT color="green">496</FONT>       *                            parser for this tool.<a name="line.496"></a>
+<FONT color="green">497</FONT>       */<a name="line.497"></a>
+<FONT color="green">498</FONT>      public final ArgumentParser createArgumentParser()<a name="line.498"></a>
+<FONT color="green">499</FONT>             throws ArgumentException<a name="line.499"></a>
+<FONT color="green">500</FONT>      {<a name="line.500"></a>
+<FONT color="green">501</FONT>        final ArgumentParser parser = new ArgumentParser(getToolName(),<a name="line.501"></a>
+<FONT color="green">502</FONT>             getToolDescription(), getMinTrailingArguments(),<a name="line.502"></a>
+<FONT color="green">503</FONT>             getMaxTrailingArguments(), getTrailingArgumentsPlaceholder());<a name="line.503"></a>
+<FONT color="green">504</FONT>    <a name="line.504"></a>
+<FONT color="green">505</FONT>        addToolArguments(parser);<a name="line.505"></a>
+<FONT color="green">506</FONT>    <a name="line.506"></a>
+<FONT color="green">507</FONT>        if (supportsInteractiveMode())<a name="line.507"></a>
+<FONT color="green">508</FONT>        {<a name="line.508"></a>
+<FONT color="green">509</FONT>          interactiveArgument = new BooleanArgument(null, "interactive",<a name="line.509"></a>
+<FONT color="green">510</FONT>               INFO_CL_TOOL_DESCRIPTION_INTERACTIVE.get());<a name="line.510"></a>
+<FONT color="green">511</FONT>          interactiveArgument.setUsageArgument(true);<a name="line.511"></a>
+<FONT color="green">512</FONT>          parser.addArgument(interactiveArgument);<a name="line.512"></a>
+<FONT color="green">513</FONT>        }<a name="line.513"></a>
+<FONT color="green">514</FONT>    <a name="line.514"></a>
+<FONT color="green">515</FONT>        helpArgument = new BooleanArgument('H', "help",<a name="line.515"></a>
+<FONT color="green">516</FONT>             INFO_CL_TOOL_DESCRIPTION_HELP.get());<a name="line.516"></a>
+<FONT color="green">517</FONT>        helpArgument.addShortIdentifier('?');<a name="line.517"></a>
+<FONT color="green">518</FONT>        helpArgument.setUsageArgument(true);<a name="line.518"></a>
+<FONT color="green">519</FONT>        parser.addArgument(helpArgument);<a name="line.519"></a>
+<FONT color="green">520</FONT>    <a name="line.520"></a>
+<FONT color="green">521</FONT>        final String version = getToolVersion();<a name="line.521"></a>
+<FONT color="green">522</FONT>        if ((version != null) &amp;&amp; (version.length() &gt; 0) &amp;&amp;<a name="line.522"></a>
+<FONT color="green">523</FONT>            (parser.getNamedArgument("version") == null))<a name="line.523"></a>
+<FONT color="green">524</FONT>        {<a name="line.524"></a>
+<FONT color="green">525</FONT>          final Character shortIdentifier;<a name="line.525"></a>
+<FONT color="green">526</FONT>          if (parser.getNamedArgument('V') == null)<a name="line.526"></a>
+<FONT color="green">527</FONT>          {<a name="line.527"></a>
+<FONT color="green">528</FONT>            shortIdentifier = 'V';<a name="line.528"></a>
+<FONT color="green">529</FONT>          }<a name="line.529"></a>
+<FONT color="green">530</FONT>          else<a name="line.530"></a>
+<FONT color="green">531</FONT>          {<a name="line.531"></a>
+<FONT color="green">532</FONT>            shortIdentifier = null;<a name="line.532"></a>
+<FONT color="green">533</FONT>          }<a name="line.533"></a>
+<FONT color="green">534</FONT>    <a name="line.534"></a>
+<FONT color="green">535</FONT>          versionArgument = new BooleanArgument(shortIdentifier, "version",<a name="line.535"></a>
+<FONT color="green">536</FONT>               INFO_CL_TOOL_DESCRIPTION_VERSION.get());<a name="line.536"></a>
+<FONT color="green">537</FONT>          versionArgument.setUsageArgument(true);<a name="line.537"></a>
+<FONT color="green">538</FONT>          parser.addArgument(versionArgument);<a name="line.538"></a>
+<FONT color="green">539</FONT>        }<a name="line.539"></a>
+<FONT color="green">540</FONT>    <a name="line.540"></a>
+<FONT color="green">541</FONT>        if (supportsPropertiesFile())<a name="line.541"></a>
+<FONT color="green">542</FONT>        {<a name="line.542"></a>
+<FONT color="green">543</FONT>          parser.enablePropertiesFileSupport();<a name="line.543"></a>
+<FONT color="green">544</FONT>        }<a name="line.544"></a>
+<FONT color="green">545</FONT>    <a name="line.545"></a>
+<FONT color="green">546</FONT>        return parser;<a name="line.546"></a>
+<FONT color="green">547</FONT>      }<a name="line.547"></a>
+<FONT color="green">548</FONT>    <a name="line.548"></a>
+<FONT color="green">549</FONT>    <a name="line.549"></a>
+<FONT color="green">550</FONT>    <a name="line.550"></a>
+<FONT color="green">551</FONT>      /**<a name="line.551"></a>
+<FONT color="green">552</FONT>       * Specifies the argument that is used to retrieve usage information about<a name="line.552"></a>
+<FONT color="green">553</FONT>       * SASL authentication.<a name="line.553"></a>
+<FONT color="green">554</FONT>       *<a name="line.554"></a>
+<FONT color="green">555</FONT>       * @param  helpSASLArgument  The argument that is used to retrieve usage<a name="line.555"></a>
+<FONT color="green">556</FONT>       *                           information about SASL authentication.<a name="line.556"></a>
+<FONT color="green">557</FONT>       */<a name="line.557"></a>
+<FONT color="green">558</FONT>      void setHelpSASLArgument(final BooleanArgument helpSASLArgument)<a name="line.558"></a>
+<FONT color="green">559</FONT>      {<a name="line.559"></a>
+<FONT color="green">560</FONT>        this.helpSASLArgument = helpSASLArgument;<a name="line.560"></a>
+<FONT color="green">561</FONT>      }<a name="line.561"></a>
+<FONT color="green">562</FONT>    <a name="line.562"></a>
+<FONT color="green">563</FONT>    <a name="line.563"></a>
+<FONT color="green">564</FONT>    <a name="line.564"></a>
+<FONT color="green">565</FONT>      /**<a name="line.565"></a>
+<FONT color="green">566</FONT>       * Retrieves a set containing the long identifiers used for LDAP-related<a name="line.566"></a>
+<FONT color="green">567</FONT>       * arguments injected by this class.<a name="line.567"></a>
+<FONT color="green">568</FONT>       *<a name="line.568"></a>
+<FONT color="green">569</FONT>       * @return  A set containing the long identifiers used for LDAP-related<a name="line.569"></a>
+<FONT color="green">570</FONT>       *          arguments injected by this class.<a name="line.570"></a>
+<FONT color="green">571</FONT>       */<a name="line.571"></a>
+<FONT color="green">572</FONT>      static Set&lt;String&gt; getUsageArgumentIdentifiers()<a name="line.572"></a>
+<FONT color="green">573</FONT>      {<a name="line.573"></a>
+<FONT color="green">574</FONT>        final LinkedHashSet&lt;String&gt; ids = new LinkedHashSet&lt;String&gt;(21);<a name="line.574"></a>
+<FONT color="green">575</FONT>    <a name="line.575"></a>
+<FONT color="green">576</FONT>        ids.add("interactive");<a name="line.576"></a>
+<FONT color="green">577</FONT>        ids.add("help");<a name="line.577"></a>
+<FONT color="green">578</FONT>        ids.add("version");<a name="line.578"></a>
+<FONT color="green">579</FONT>    <a name="line.579"></a>
+<FONT color="green">580</FONT>        return Collections.unmodifiableSet(ids);<a name="line.580"></a>
+<FONT color="green">581</FONT>      }<a name="line.581"></a>
+<FONT color="green">582</FONT>    <a name="line.582"></a>
+<FONT color="green">583</FONT>    <a name="line.583"></a>
+<FONT color="green">584</FONT>    <a name="line.584"></a>
+<FONT color="green">585</FONT>      /**<a name="line.585"></a>
+<FONT color="green">586</FONT>       * Adds the command-line arguments supported for use with this tool to the<a name="line.586"></a>
+<FONT color="green">587</FONT>       * provided argument parser.  The tool may need to retain references to the<a name="line.587"></a>
+<FONT color="green">588</FONT>       * arguments (and/or the argument parser, if trailing arguments are allowed)<a name="line.588"></a>
+<FONT color="green">589</FONT>       * to it in order to obtain their values for use in later processing.<a name="line.589"></a>
+<FONT color="green">590</FONT>       *<a name="line.590"></a>
+<FONT color="green">591</FONT>       * @param  parser  The argument parser to which the arguments are to be added.<a name="line.591"></a>
+<FONT color="green">592</FONT>       *<a name="line.592"></a>
+<FONT color="green">593</FONT>       * @throws  ArgumentException  If a problem occurs while adding any of the<a name="line.593"></a>
+<FONT color="green">594</FONT>       *                             tool-specific arguments to the provided<a name="line.594"></a>
+<FONT color="green">595</FONT>       *                             argument parser.<a name="line.595"></a>
+<FONT color="green">596</FONT>       */<a name="line.596"></a>
+<FONT color="green">597</FONT>      public abstract void addToolArguments(final ArgumentParser parser)<a name="line.597"></a>
+<FONT color="green">598</FONT>             throws ArgumentException;<a name="line.598"></a>
+<FONT color="green">599</FONT>    <a name="line.599"></a>
+<FONT color="green">600</FONT>    <a name="line.600"></a>
+<FONT color="green">601</FONT>    <a name="line.601"></a>
+<FONT color="green">602</FONT>      /**<a name="line.602"></a>
+<FONT color="green">603</FONT>       * Performs any necessary processing that should be done to ensure that the<a name="line.603"></a>
+<FONT color="green">604</FONT>       * provided set of command-line arguments were valid.  This method will be<a name="line.604"></a>
+<FONT color="green">605</FONT>       * called after the basic argument parsing has been performed and immediately<a name="line.605"></a>
+<FONT color="green">606</FONT>       * before the {@link CommandLineTool#doToolProcessing} method is invoked.<a name="line.606"></a>
+<FONT color="green">607</FONT>       * Note that if the tool supports interactive mode, then this method may be<a name="line.607"></a>
+<FONT color="green">608</FONT>       * invoked multiple times to allow the user to interactively fix validation<a name="line.608"></a>
+<FONT color="green">609</FONT>       * errors.<a name="line.609"></a>
+<FONT color="green">610</FONT>       *<a name="line.610"></a>
+<FONT color="green">611</FONT>       * @throws  ArgumentException  If there was a problem with the command-line<a name="line.611"></a>
+<FONT color="green">612</FONT>       *                             arguments provided to this program.<a name="line.612"></a>
+<FONT color="green">613</FONT>       */<a name="line.613"></a>
+<FONT color="green">614</FONT>      public void doExtendedArgumentValidation()<a name="line.614"></a>
+<FONT color="green">615</FONT>             throws ArgumentException<a name="line.615"></a>
+<FONT color="green">616</FONT>      {<a name="line.616"></a>
+<FONT color="green">617</FONT>        // No processing will be performed by default.<a name="line.617"></a>
+<FONT color="green">618</FONT>      }<a name="line.618"></a>
+<FONT color="green">619</FONT>    <a name="line.619"></a>
+<FONT color="green">620</FONT>    <a name="line.620"></a>
+<FONT color="green">621</FONT>    <a name="line.621"></a>
+<FONT color="green">622</FONT>      /**<a name="line.622"></a>
+<FONT color="green">623</FONT>       * Performs the core set of processing for this tool.<a name="line.623"></a>
+<FONT color="green">624</FONT>       *<a name="line.624"></a>
+<FONT color="green">625</FONT>       * @return  A result code that indicates whether the processing completed<a name="line.625"></a>
+<FONT color="green">626</FONT>       *          successfully.<a name="line.626"></a>
+<FONT color="green">627</FONT>       */<a name="line.627"></a>
+<FONT color="green">628</FONT>      public abstract ResultCode doToolProcessing();<a name="line.628"></a>
+<FONT color="green">629</FONT>    <a name="line.629"></a>
+<FONT color="green">630</FONT>    <a name="line.630"></a>
+<FONT color="green">631</FONT>    <a name="line.631"></a>
+<FONT color="green">632</FONT>      /**<a name="line.632"></a>
+<FONT color="green">633</FONT>       * Indicates whether this tool should register a shutdown hook with the JVM.<a name="line.633"></a>
+<FONT color="green">634</FONT>       * Shutdown hooks allow for a best-effort attempt to perform a specified set<a name="line.634"></a>
+<FONT color="green">635</FONT>       * of processing when the JVM is shutting down under various conditions,<a name="line.635"></a>
+<FONT color="green">636</FONT>       * including:<a name="line.636"></a>
+<FONT color="green">637</FONT>       * &lt;UL&gt;<a name="line.637"></a>
+<FONT color="green">638</FONT>       *   &lt;LI&gt;When all non-daemon threads have stopped running (i.e., the tool has<a name="line.638"></a>
+<FONT color="green">639</FONT>       *       completed processing).&lt;/LI&gt;<a name="line.639"></a>
+<FONT color="green">640</FONT>       *   &lt;LI&gt;When {@code System.exit()} or {@code Runtime.exit()} is called.&lt;/LI&gt;<a name="line.640"></a>
+<FONT color="green">641</FONT>       *   &lt;LI&gt;When the JVM receives an external kill signal (e.g., via the use of<a name="line.641"></a>
+<FONT color="green">642</FONT>       *       the kill tool or interrupting the JVM with Ctrl+C).&lt;/LI&gt;<a name="line.642"></a>
+<FONT color="green">643</FONT>       * &lt;/UL&gt;<a name="line.643"></a>
+<FONT color="green">644</FONT>       * Shutdown hooks may not be invoked if the process is forcefully killed<a name="line.644"></a>
+<FONT color="green">645</FONT>       * (e.g., using "kill -9", or the {@code System.halt()} or<a name="line.645"></a>
+<FONT color="green">646</FONT>       * {@code Runtime.halt()} methods).<a name="line.646"></a>
+<FONT color="green">647</FONT>       * &lt;BR&gt;&lt;BR&gt;<a name="line.647"></a>
+<FONT color="green">648</FONT>       * If this method is overridden to return {@code true}, then the<a name="line.648"></a>
+<FONT color="green">649</FONT>       * {@link #doShutdownHookProcessing(ResultCode)} method should also be<a name="line.649"></a>
+<FONT color="green">650</FONT>       * overridden to contain the logic that will be invoked when the JVM is<a name="line.650"></a>
+<FONT color="green">651</FONT>       * shutting down in a manner that calls shutdown hooks.<a name="line.651"></a>
+<FONT color="green">652</FONT>       *<a name="line.652"></a>
+<FONT color="green">653</FONT>       * @return  {@code true} if this tool should register a shutdown hook, or<a name="line.653"></a>
+<FONT color="green">654</FONT>       *          {@code false} if not.<a name="line.654"></a>
+<FONT color="green">655</FONT>       */<a name="line.655"></a>
+<FONT color="green">656</FONT>      protected boolean registerShutdownHook()<a name="line.656"></a>
+<FONT color="green">657</FONT>      {<a name="line.657"></a>
+<FONT color="green">658</FONT>        return false;<a name="line.658"></a>
+<FONT color="green">659</FONT>      }<a name="line.659"></a>
+<FONT color="green">660</FONT>    <a name="line.660"></a>
+<FONT color="green">661</FONT>    <a name="line.661"></a>
+<FONT color="green">662</FONT>    <a name="line.662"></a>
+<FONT color="green">663</FONT>      /**<a name="line.663"></a>
+<FONT color="green">664</FONT>       * Performs any processing that may be needed when the JVM is shutting down,<a name="line.664"></a>
+<FONT color="green">665</FONT>       * whether because tool processing has completed or because it has been<a name="line.665"></a>
+<FONT color="green">666</FONT>       * interrupted (e.g., by a kill or break signal).<a name="line.666"></a>
+<FONT color="green">667</FONT>       * &lt;BR&gt;&lt;BR&gt;<a name="line.667"></a>
+<FONT color="green">668</FONT>       * Note that because shutdown hooks run at a delicate time in the life of the<a name="line.668"></a>
+<FONT color="green">669</FONT>       * JVM, they should complete quickly and minimize access to external<a name="line.669"></a>
+<FONT color="green">670</FONT>       * resources.  See the documentation for the<a name="line.670"></a>
+<FONT color="green">671</FONT>       * {@code java.lang.Runtime.addShutdownHook} method for recommendations and<a name="line.671"></a>
+<FONT color="green">672</FONT>       * restrictions about writing shutdown hooks.<a name="line.672"></a>
+<FONT color="green">673</FONT>       *<a name="line.673"></a>
+<FONT color="green">674</FONT>       * @param  resultCode  The result code returned by the tool.  It may be<a name="line.674"></a>
+<FONT color="green">675</FONT>       *                     {@code null} if the tool was interrupted before it<a name="line.675"></a>
+<FONT color="green">676</FONT>       *                     completed processing.<a name="line.676"></a>
+<FONT color="green">677</FONT>       */<a name="line.677"></a>
+<FONT color="green">678</FONT>      protected void doShutdownHookProcessing(final ResultCode resultCode)<a name="line.678"></a>
+<FONT color="green">679</FONT>      {<a name="line.679"></a>
+<FONT color="green">680</FONT>        throw new LDAPSDKUsageException(<a name="line.680"></a>
+<FONT color="green">681</FONT>             ERR_COMMAND_LINE_TOOL_SHUTDOWN_HOOK_NOT_IMPLEMENTED.get(<a name="line.681"></a>
+<FONT color="green">682</FONT>                  getToolName()));<a name="line.682"></a>
+<FONT color="green">683</FONT>      }<a name="line.683"></a>
+<FONT color="green">684</FONT>    <a name="line.684"></a>
+<FONT color="green">685</FONT>    <a name="line.685"></a>
+<FONT color="green">686</FONT>    <a name="line.686"></a>
+<FONT color="green">687</FONT>      /**<a name="line.687"></a>
+<FONT color="green">688</FONT>       * Retrieves a set of information that may be used to generate example usage<a name="line.688"></a>
+<FONT color="green">689</FONT>       * information.  Each element in the returned map should consist of a map<a name="line.689"></a>
+<FONT color="green">690</FONT>       * between an example set of arguments and a string that describes the<a name="line.690"></a>
+<FONT color="green">691</FONT>       * behavior of the tool when invoked with that set of arguments.<a name="line.691"></a>
+<FONT color="green">692</FONT>       *<a name="line.692"></a>
+<FONT color="green">693</FONT>       * @return  A set of information that may be used to generate example usage<a name="line.693"></a>
+<FONT color="green">694</FONT>       *          information.  It may be {@code null} or empty if no example usage<a name="line.694"></a>
+<FONT color="green">695</FONT>       *          information is available.<a name="line.695"></a>
+<FONT color="green">696</FONT>       */<a name="line.696"></a>
+<FONT color="green">697</FONT>      @ThreadSafety(level=ThreadSafetyLevel.METHOD_THREADSAFE)<a name="line.697"></a>
+<FONT color="green">698</FONT>      public LinkedHashMap&lt;String[],String&gt; getExampleUsages()<a name="line.698"></a>
+<FONT color="green">699</FONT>      {<a name="line.699"></a>
+<FONT color="green">700</FONT>        return null;<a name="line.700"></a>
+<FONT color="green">701</FONT>      }<a name="line.701"></a>
+<FONT color="green">702</FONT>    <a name="line.702"></a>
+<FONT color="green">703</FONT>    <a name="line.703"></a>
+<FONT color="green">704</FONT>    <a name="line.704"></a>
+<FONT color="green">705</FONT>      /**<a name="line.705"></a>
+<FONT color="green">706</FONT>       * Retrieves the print writer that will be used for standard output.<a name="line.706"></a>
+<FONT color="green">707</FONT>       *<a name="line.707"></a>
+<FONT color="green">708</FONT>       * @return  The print writer that will be used for standard output.<a name="line.708"></a>
+<FONT color="green">709</FONT>       */<a name="line.709"></a>
+<FONT color="green">710</FONT>      public final PrintStream getOut()<a name="line.710"></a>
+<FONT color="green">711</FONT>      {<a name="line.711"></a>
+<FONT color="green">712</FONT>        return out;<a name="line.712"></a>
+<FONT color="green">713</FONT>      }<a name="line.713"></a>
+<FONT color="green">714</FONT>    <a name="line.714"></a>
+<FONT color="green">715</FONT>    <a name="line.715"></a>
+<FONT color="green">716</FONT>    <a name="line.716"></a>
+<FONT color="green">717</FONT>      /**<a name="line.717"></a>
+<FONT color="green">718</FONT>       * Writes the provided message to the standard output stream for this tool.<a name="line.718"></a>
+<FONT color="green">719</FONT>       * &lt;BR&gt;&lt;BR&gt;<a name="line.719"></a>
+<FONT color="green">720</FONT>       * This method is completely threadsafe and my be invoked concurrently by any<a name="line.720"></a>
+<FONT color="green">721</FONT>       * number of threads.<a name="line.721"></a>
+<FONT color="green">722</FONT>       *<a name="line.722"></a>
+<FONT color="green">723</FONT>       * @param  msg  The message components that will be written to the standard<a name="line.723"></a>
+<FONT color="green">724</FONT>       *              output stream.  They will be concatenated together on the same<a name="line.724"></a>
+<FONT color="green">725</FONT>       *              line, and that line will be followed by an end-of-line<a name="line.725"></a>
+<FONT color="green">726</FONT>       *              sequence.<a name="line.726"></a>
+<FONT color="green">727</FONT>       */<a name="line.727"></a>
+<FONT color="green">728</FONT>      @ThreadSafety(level=ThreadSafetyLevel.METHOD_THREADSAFE)<a name="line.728"></a>
+<FONT color="green">729</FONT>      public final synchronized void out(final Object... msg)<a name="line.729"></a>
+<FONT color="green">730</FONT>      {<a name="line.730"></a>
+<FONT color="green">731</FONT>        write(out, 0, 0, msg);<a name="line.731"></a>
+<FONT color="green">732</FONT>      }<a name="line.732"></a>
+<FONT color="green">733</FONT>    <a name="line.733"></a>
+<FONT color="green">734</FONT>    <a name="line.734"></a>
+<FONT color="green">735</FONT>    <a name="line.735"></a>
+<FONT color="green">736</FONT>      /**<a name="line.736"></a>
+<FONT color="green">737</FONT>       * Writes the provided message to the standard output stream for this tool,<a name="line.737"></a>
+<FONT color="green">738</FONT>       * optionally wrapping and/or indenting the text in the process.<a name="line.738"></a>
+<FONT color="green">739</FONT>       * &lt;BR&gt;&lt;BR&gt;<a name="line.739"></a>
+<FONT color="green">740</FONT>       * This method is completely threadsafe and my be invoked concurrently by any<a name="line.740"></a>
+<FONT color="green">741</FONT>       * number of threads.<a name="line.741"></a>
+<FONT color="green">742</FONT>       *<a name="line.742"></a>
+<FONT color="green">743</FONT>       * @param  indent      The number of spaces each line should be indented.  A<a name="line.743"></a>
+<FONT color="green">744</FONT>       *                     value less than or equal to zero indicates that no<a name="line.744"></a>
+<FONT color="green">745</FONT>       *                     indent should be used.<a name="line.745"></a>
+<FONT color="green">746</FONT>       * @param  wrapColumn  The column at which to wrap long lines.  A value less<a name="line.746"></a>
+<FONT color="green">747</FONT>       *                     than or equal to two indicates that no wrapping should<a name="line.747"></a>
+<FONT color="green">748</FONT>       *                     be performed.  If both an indent and a wrap column are<a name="line.748"></a>
+<FONT color="green">749</FONT>       *                     to be used, then the wrap column must be greater than<a name="line.749"></a>
+<FONT color="green">750</FONT>       *                     the indent.<a name="line.750"></a>
+<FONT color="green">751</FONT>       * @param  msg         The message components that will be written to the<a name="line.751"></a>
+<FONT color="green">752</FONT>       *                     standard output stream.  They will be concatenated<a name="line.752"></a>
+<FONT color="green">753</FONT>       *                     together on the same line, and that line will be<a name="line.753"></a>
+<FONT color="green">754</FONT>       *                     followed by an end-of-line sequence.<a name="line.754"></a>
+<FONT color="green">755</FONT>       */<a name="line.755"></a>
+<FONT color="green">756</FONT>      @ThreadSafety(level=ThreadSafetyLevel.METHOD_THREADSAFE)<a name="line.756"></a>
+<FONT color="green">757</FONT>      public final synchronized void wrapOut(final int indent, final int wrapColumn,<a name="line.757"></a>
+<FONT color="green">758</FONT>                                             final Object... msg)<a name="line.758"></a>
+<FONT color="green">759</FONT>      {<a name="line.759"></a>
+<FONT color="green">760</FONT>        write(out, indent, wrapColumn, msg);<a name="line.760"></a>
+<FONT color="green">761</FONT>      }<a name="line.761"></a>
+<FONT color="green">762</FONT>    <a name="line.762"></a>
+<FONT color="green">763</FONT>    <a name="line.763"></a>
+<FONT color="green">764</FONT>    <a name="line.764"></a>
+<FONT color="green">765</FONT>      /**<a name="line.765"></a>
+<FONT color="green">766</FONT>       * Writes the provided message to the standard output stream for this tool,<a name="line.766"></a>
+<FONT color="green">767</FONT>       * optionally wrapping and/or indenting the text in the process.<a name="line.767"></a>
+<FONT color="green">768</FONT>       * &lt;BR&gt;&lt;BR&gt;<a name="line.768"></a>
+<FONT color="green">769</FONT>       * This method is completely threadsafe and my be invoked concurrently by any<a name="line.769"></a>
+<FONT color="green">770</FONT>       * number of threads.<a name="line.770"></a>
+<FONT color="green">771</FONT>       *<a name="line.771"></a>
+<FONT color="green">772</FONT>       * @param  firstLineIndent       The number of spaces the first line should be<a name="line.772"></a>
+<FONT color="green">773</FONT>       *                               indented.  A value less than or equal to zero<a name="line.773"></a>
+<FONT color="green">774</FONT>       *                               indicates that no indent should be used.<a name="line.774"></a>
+<FONT color="green">775</FONT>       * @param  subsequentLineIndent  The number of spaces each line except the<a name="line.775"></a>
+<FONT color="green">776</FONT>       *                               first should be indented.  A value less than<a name="line.776"></a>
+<FONT color="green">777</FONT>       *                               or equal to zero indicates that no indent<a name="line.777"></a>
+<FONT color="green">778</FONT>       *                               should be used.<a name="line.778"></a>
+<FONT color="green">779</FONT>       * @param  wrapColumn            The column at which to wrap long lines.  A<a name="line.779"></a>
+<FONT color="green">780</FONT>       *                               value less than or equal to two indicates<a name="line.780"></a>
+<FONT color="green">781</FONT>       *                               that no wrapping should be performed.  If<a name="line.781"></a>
+<FONT color="green">782</FONT>       *                               both an indent and a wrap column are to be<a name="line.782"></a>
+<FONT color="green">783</FONT>       *                               used, then the wrap column must be greater<a name="line.783"></a>
+<FONT color="green">784</FONT>       *                               than the indent.<a name="line.784"></a>
+<FONT color="green">785</FONT>       * @param  endWithNewline        Indicates whether a newline sequence should<a name="line.785"></a>
+<FONT color="green">786</FONT>       *                               follow the last line that is printed.<a name="line.786"></a>
+<FONT color="green">787</FONT>       * @param  msg                   The message components that will be written<a name="line.787"></a>
+<FONT color="green">788</FONT>       *                               to the standard output stream.  They will be<a name="line.788"></a>
+<FONT color="green">789</FONT>       *                               concatenated together on the same line, and<a name="line.789"></a>
+<FONT color="green">790</FONT>       *                               that line will be followed by an end-of-line<a name="line.790"></a>
+<FONT color="green">791</FONT>       *                               sequence.<a name="line.791"></a>
+<FONT color="green">792</FONT>       */<a name="line.792"></a>
+<FONT color="green">793</FONT>      final synchronized void wrapStandardOut(final int firstLineIndent,<a name="line.793"></a>
+<FONT color="green">794</FONT>                                              final int subsequentLineIndent,<a name="line.794"></a>
+<FONT color="green">795</FONT>                                              final int wrapColumn,<a name="line.795"></a>
+<FONT color="green">796</FONT>                                              final boolean endWithNewline,<a name="line.796"></a>
+<FONT color="green">797</FONT>                                              final Object... msg)<a name="line.797"></a>
+<FONT color="green">798</FONT>      {<a name="line.798"></a>
+<FONT color="green">799</FONT>        write(out, firstLineIndent, subsequentLineIndent, wrapColumn,<a name="line.799"></a>
+<FONT color="green">800</FONT>             endWithNewline, msg);<a name="line.800"></a>
+<FONT color="green">801</FONT>      }<a name="line.801"></a>
+<FONT color="green">802</FONT>    <a name="line.802"></a>
+<FONT color="green">803</FONT>    <a name="line.803"></a>
+<FONT color="green">804</FONT>    <a name="line.804"></a>
+<FONT color="green">805</FONT>      /**<a name="line.805"></a>
+<FONT color="green">806</FONT>       * Retrieves the print writer that will be used for standard error.<a name="line.806"></a>
+<FONT color="green">807</FONT>       *<a name="line.807"></a>
+<FONT color="green">808</FONT>       * @return  The print writer that will be used for standard error.<a name="line.808"></a>
+<FONT color="green">809</FONT>       */<a name="line.809"></a>
+<FONT color="green">810</FONT>      public final PrintStream getErr()<a name="line.810"></a>
+<FONT color="green">811</FONT>      {<a name="line.811"></a>
+<FONT color="green">812</FONT>        return err;<a name="line.812"></a>
+<FONT color="green">813</FONT>      }<a name="line.813"></a>
+<FONT color="green">814</FONT>    <a name="line.814"></a>
+<FONT color="green">815</FONT>    <a name="line.815"></a>
+<FONT color="green">816</FONT>    <a name="line.816"></a>
+<FONT color="green">817</FONT>      /**<a name="line.817"></a>
+<FONT color="green">818</FONT>       * Writes the provided message to the standard error stream for this tool.<a name="line.818"></a>
+<FONT color="green">819</FONT>       * &lt;BR&gt;&lt;BR&gt;<a name="line.819"></a>
+<FONT color="green">820</FONT>       * This method is completely threadsafe and my be invoked concurrently by any<a name="line.820"></a>
+<FONT color="green">821</FONT>       * number of threads.<a name="line.821"></a>
+<FONT color="green">822</FONT>       *<a name="line.822"></a>
+<FONT color="green">823</FONT>       * @param  msg  The message components that will be written to the standard<a name="line.823"></a>
+<FONT color="green">824</FONT>       *              error stream.  They will be concatenated together on the same<a name="line.824"></a>
+<FONT color="green">825</FONT>       *              line, and that line will be followed by an end-of-line<a name="line.825"></a>
+<FONT color="green">826</FONT>       *              sequence.<a name="line.826"></a>
+<FONT color="green">827</FONT>       */<a name="line.827"></a>
+<FONT color="green">828</FONT>      @ThreadSafety(level=ThreadSafetyLevel.METHOD_THREADSAFE)<a name="line.828"></a>
+<FONT color="green">829</FONT>      public final synchronized void err(final Object... msg)<a name="line.829"></a>
+<FONT color="green">830</FONT>      {<a name="line.830"></a>
+<FONT color="green">831</FONT>        write(err, 0, 0, msg);<a name="line.831"></a>
+<FONT color="green">832</FONT>      }<a name="line.832"></a>
+<FONT color="green">833</FONT>    <a name="line.833"></a>
+<FONT color="green">834</FONT>    <a name="line.834"></a>
+<FONT color="green">835</FONT>    <a name="line.835"></a>
+<FONT color="green">836</FONT>      /**<a name="line.836"></a>
+<FONT color="green">837</FONT>       * Writes the provided message to the standard error stream for this tool,<a name="line.837"></a>
+<FONT color="green">838</FONT>       * optionally wrapping and/or indenting the text in the process.<a name="line.838"></a>
+<FONT color="green">839</FONT>       * &lt;BR&gt;&lt;BR&gt;<a name="line.839"></a>
+<FONT color="green">840</FONT>       * This method is completely threadsafe and my be invoked concurrently by any<a name="line.840"></a>
+<FONT color="green">841</FONT>       * number of threads.<a name="line.841"></a>
+<FONT color="green">842</FONT>       *<a name="line.842"></a>
+<FONT color="green">843</FONT>       * @param  indent      The number of spaces each line should be indented.  A<a name="line.843"></a>
+<FONT color="green">844</FONT>       *                     value less than or equal to zero indicates that no<a name="line.844"></a>
+<FONT color="green">845</FONT>       *                     indent should be used.<a name="line.845"></a>
+<FONT color="green">846</FONT>       * @param  wrapColumn  The column at which to wrap long lines.  A value less<a name="line.846"></a>
+<FONT color="green">847</FONT>       *                     than or equal to two indicates that no wrapping should<a name="line.847"></a>
+<FONT color="green">848</FONT>       *                     be performed.  If both an indent and a wrap column are<a name="line.848"></a>
+<FONT color="green">849</FONT>       *                     to be used, then the wrap column must be greater than<a name="line.849"></a>
+<FONT color="green">850</FONT>       *                     the indent.<a name="line.850"></a>
+<FONT color="green">851</FONT>       * @param  msg         The message components that will be written to the<a name="line.851"></a>
+<FONT color="green">852</FONT>       *                     standard output stream.  They will be concatenated<a name="line.852"></a>
+<FONT color="green">853</FONT>       *                     together on the same line, and that line will be<a name="line.853"></a>
+<FONT color="green">854</FONT>       *                     followed by an end-of-line sequence.<a name="line.854"></a>
+<FONT color="green">855</FONT>       */<a name="line.855"></a>
+<FONT color="green">856</FONT>      @ThreadSafety(level=ThreadSafetyLevel.METHOD_THREADSAFE)<a name="line.856"></a>
+<FONT color="green">857</FONT>      public final synchronized void wrapErr(final int indent, final int wrapColumn,<a name="line.857"></a>
+<FONT color="green">858</FONT>                                             final Object... msg)<a name="line.858"></a>
+<FONT color="green">859</FONT>      {<a name="line.859"></a>
+<FONT color="green">860</FONT>        write(err, indent, wrapColumn, msg);<a name="line.860"></a>
+<FONT color="green">861</FONT>      }<a name="line.861"></a>
+<FONT color="green">862</FONT>    <a name="line.862"></a>
+<FONT color="green">863</FONT>    <a name="line.863"></a>
+<FONT color="green">864</FONT>    <a name="line.864"></a>
+<FONT color="green">865</FONT>      /**<a name="line.865"></a>
+<FONT color="green">866</FONT>       * Writes the provided message to the given print stream, optionally wrapping<a name="line.866"></a>
+<FONT color="green">867</FONT>       * and/or indenting the text in the process.<a name="line.867"></a>
+<FONT color="green">868</FONT>       *<a name="line.868"></a>
+<FONT color="green">869</FONT>       * @param  stream      The stream to which the message should be written.<a name="line.869"></a>
+<FONT color="green">870</FONT>       * @param  indent      The number of spaces each line should be indented.  A<a name="line.870"></a>
+<FONT color="green">871</FONT>       *                     value less than or equal to zero indicates that no<a name="line.871"></a>
+<FONT color="green">872</FONT>       *                     indent should be used.<a name="line.872"></a>
+<FONT color="green">873</FONT>       * @param  wrapColumn  The column at which to wrap long lines.  A value less<a name="line.873"></a>
+<FONT color="green">874</FONT>       *                     than or equal to two indicates that no wrapping should<a name="line.874"></a>
+<FONT color="green">875</FONT>       *                     be performed.  If both an indent and a wrap column are<a name="line.875"></a>
+<FONT color="green">876</FONT>       *                     to be used, then the wrap column must be greater than<a name="line.876"></a>
+<FONT color="green">877</FONT>       *                     the indent.<a name="line.877"></a>
+<FONT color="green">878</FONT>       * @param  msg         The message components that will be written to the<a name="line.878"></a>
+<FONT color="green">879</FONT>       *                     standard output stream.  They will be concatenated<a name="line.879"></a>
+<FONT color="green">880</FONT>       *                     together on the same line, and that line will be<a name="line.880"></a>
+<FONT color="green">881</FONT>       *                     followed by an end-of-line sequence.<a name="line.881"></a>
+<FONT color="green">882</FONT>       */<a name="line.882"></a>
+<FONT color="green">883</FONT>      private static void write(final PrintStream stream, final int indent,<a name="line.883"></a>
+<FONT color="green">884</FONT>                                final int wrapColumn, final Object... msg)<a name="line.884"></a>
+<FONT color="green">885</FONT>      {<a name="line.885"></a>
+<FONT color="green">886</FONT>        write(stream, indent, indent, wrapColumn, true, msg);<a name="line.886"></a>
+<FONT color="green">887</FONT>      }<a name="line.887"></a>
+<FONT color="green">888</FONT>    <a name="line.888"></a>
+<FONT color="green">889</FONT>    <a name="line.889"></a>
+<FONT color="green">890</FONT>    <a name="line.890"></a>
+<FONT color="green">891</FONT>      /**<a name="line.891"></a>
+<FONT color="green">892</FONT>       * Writes the provided message to the given print stream, optionally wrapping<a name="line.892"></a>
+<FONT color="green">893</FONT>       * and/or indenting the text in the process.<a name="line.893"></a>
+<FONT color="green">894</FONT>       *<a name="line.894"></a>
+<FONT color="green">895</FONT>       * @param  stream                The stream to which the message should be<a name="line.895"></a>
+<FONT color="green">896</FONT>       *                               written.<a name="line.896"></a>
+<FONT color="green">897</FONT>       * @param  firstLineIndent       The number of spaces the first line should be<a name="line.897"></a>
+<FONT color="green">898</FONT>       *                               indented.  A value less than or equal to zero<a name="line.898"></a>
+<FONT color="green">899</FONT>       *                               indicates that no indent should be used.<a name="line.899"></a>
+<FONT color="green">900</FONT>       * @param  subsequentLineIndent  The number of spaces all lines after the<a name="line.900"></a>
+<FONT color="green">901</FONT>       *                               first should be indented.  A value less than<a name="line.901"></a>
+<FONT color="green">902</FONT>       *                               or equal to zero indicates that no indent<a name="line.902"></a>
+<FONT color="green">903</FONT>       *                               should be used.<a name="line.903"></a>
+<FONT color="green">904</FONT>       * @param  wrapColumn            The column at which to wrap long lines.  A<a name="line.904"></a>
+<FONT color="green">905</FONT>       *                               value less than or equal to two indicates<a name="line.905"></a>
+<FONT color="green">906</FONT>       *                               that no wrapping should be performed.  If<a name="line.906"></a>
+<FONT color="green">907</FONT>       *                               both an indent and a wrap column are to be<a name="line.907"></a>
+<FONT color="green">908</FONT>       *                               used, then the wrap column must be greater<a name="line.908"></a>
+<FONT color="green">909</FONT>       *                               than the indent.<a name="line.909"></a>
+<FONT color="green">910</FONT>       * @param  endWithNewline        Indicates whether a newline sequence should<a name="line.910"></a>
+<FONT color="green">911</FONT>       *                               follow the last line that is printed.<a name="line.911"></a>
+<FONT color="green">912</FONT>       * @param  msg                   The message components that will be written<a name="line.912"></a>
+<FONT color="green">913</FONT>       *                               to the standard output stream.  They will be<a name="line.913"></a>
+<FONT color="green">914</FONT>       *                               concatenated together on the same line, and<a name="line.914"></a>
+<FONT color="green">915</FONT>       *                               that line will be followed by an end-of-line<a name="line.915"></a>
+<FONT color="green">916</FONT>       *                               sequence.<a name="line.916"></a>
+<FONT color="green">917</FONT>       */<a name="line.917"></a>
+<FONT color="green">918</FONT>      private static void write(final PrintStream stream, final int firstLineIndent,<a name="line.918"></a>
+<FONT color="green">919</FONT>                                final int subsequentLineIndent,<a name="line.919"></a>
+<FONT color="green">920</FONT>                                final int wrapColumn,<a name="line.920"></a>
+<FONT color="green">921</FONT>                                final boolean endWithNewline, final Object... msg)<a name="line.921"></a>
+<FONT color="green">922</FONT>      {<a name="line.922"></a>
+<FONT color="green">923</FONT>        final StringBuilder buffer = new StringBuilder();<a name="line.923"></a>
+<FONT color="green">924</FONT>        for (final Object o : msg)<a name="line.924"></a>
+<FONT color="green">925</FONT>        {<a name="line.925"></a>
+<FONT color="green">926</FONT>          buffer.append(o);<a name="line.926"></a>
+<FONT color="green">927</FONT>        }<a name="line.927"></a>
+<FONT color="green">928</FONT>    <a name="line.928"></a>
+<FONT color="green">929</FONT>        if (wrapColumn &gt; 2)<a name="line.929"></a>
+<FONT color="green">930</FONT>        {<a name="line.930"></a>
+<FONT color="green">931</FONT>          boolean firstLine = true;<a name="line.931"></a>
+<FONT color="green">932</FONT>          for (final String line :<a name="line.932"></a>
+<FONT color="green">933</FONT>               wrapLine(buffer.toString(), (wrapColumn - firstLineIndent),<a name="line.933"></a>
+<FONT color="green">934</FONT>                    (wrapColumn - subsequentLineIndent)))<a name="line.934"></a>
+<FONT color="green">935</FONT>          {<a name="line.935"></a>
+<FONT color="green">936</FONT>            final int indent;<a name="line.936"></a>
+<FONT color="green">937</FONT>            if (firstLine)<a name="line.937"></a>
+<FONT color="green">938</FONT>            {<a name="line.938"></a>
+<FONT color="green">939</FONT>              indent = firstLineIndent;<a name="line.939"></a>
+<FONT color="green">940</FONT>              firstLine = false;<a name="line.940"></a>
+<FONT color="green">941</FONT>            }<a name="line.941"></a>
+<FONT color="green">942</FONT>            else<a name="line.942"></a>
+<FONT color="green">943</FONT>            {<a name="line.943"></a>
+<FONT color="green">944</FONT>              stream.println();<a name="line.944"></a>
+<FONT color="green">945</FONT>              indent = subsequentLineIndent;<a name="line.945"></a>
+<FONT color="green">946</FONT>            }<a name="line.946"></a>
+<FONT color="green">947</FONT>    <a name="line.947"></a>
+<FONT color="green">948</FONT>            if (indent &gt; 0)<a name="line.948"></a>
+<FONT color="green">949</FONT>            {<a name="line.949"></a>
+<FONT color="green">950</FONT>              for (int i=0; i &lt; indent; i++)<a name="line.950"></a>
+<FONT color="green">951</FONT>              {<a name="line.951"></a>
+<FONT color="green">952</FONT>                stream.print(' ');<a name="line.952"></a>
+<FONT color="green">953</FONT>              }<a name="line.953"></a>
+<FONT color="green">954</FONT>            }<a name="line.954"></a>
+<FONT color="green">955</FONT>            stream.print(line);<a name="line.955"></a>
+<FONT color="green">956</FONT>          }<a name="line.956"></a>
+<FONT color="green">957</FONT>        }<a name="line.957"></a>
+<FONT color="green">958</FONT>        else<a name="line.958"></a>
+<FONT color="green">959</FONT>        {<a name="line.959"></a>
+<FONT color="green">960</FONT>          if (firstLineIndent &gt; 0)<a name="line.960"></a>
+<FONT color="green">961</FONT>          {<a name="line.961"></a>
+<FONT color="green">962</FONT>            for (int i=0; i &lt; firstLineIndent; i++)<a name="line.962"></a>
+<FONT color="green">963</FONT>            {<a name="line.963"></a>
+<FONT color="green">964</FONT>              stream.print(' ');<a name="line.964"></a>
+<FONT color="green">965</FONT>            }<a name="line.965"></a>
+<FONT color="green">966</FONT>          }<a name="line.966"></a>
+<FONT color="green">967</FONT>          stream.print(buffer.toString());<a name="line.967"></a>
+<FONT color="green">968</FONT>        }<a name="line.968"></a>
+<FONT color="green">969</FONT>    <a name="line.969"></a>
+<FONT color="green">970</FONT>        if (endWithNewline)<a name="line.970"></a>
+<FONT color="green">971</FONT>        {<a name="line.971"></a>
+<FONT color="green">972</FONT>          stream.println();<a name="line.972"></a>
+<FONT color="green">973</FONT>        }<a name="line.973"></a>
+<FONT color="green">974</FONT>        stream.flush();<a name="line.974"></a>
+<FONT color="green">975</FONT>      }<a name="line.975"></a>
+<FONT color="green">976</FONT>    }<a name="line.976"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

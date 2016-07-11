@@ -1,0 +1,485 @@
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    /*<a name="line.1"></a>
+<FONT color="green">002</FONT>     * Copyright 2015-2016 UnboundID Corp.<a name="line.2"></a>
+<FONT color="green">003</FONT>     * All Rights Reserved.<a name="line.3"></a>
+<FONT color="green">004</FONT>     */<a name="line.4"></a>
+<FONT color="green">005</FONT>    /*<a name="line.5"></a>
+<FONT color="green">006</FONT>     * Copyright (C) 2015-2016 UnboundID Corp.<a name="line.6"></a>
+<FONT color="green">007</FONT>     *<a name="line.7"></a>
+<FONT color="green">008</FONT>     * This program is free software; you can redistribute it and/or modify<a name="line.8"></a>
+<FONT color="green">009</FONT>     * it under the terms of the GNU General Public License (GPLv2 only)<a name="line.9"></a>
+<FONT color="green">010</FONT>     * or the terms of the GNU Lesser General Public License (LGPLv2.1 only)<a name="line.10"></a>
+<FONT color="green">011</FONT>     * as published by the Free Software Foundation.<a name="line.11"></a>
+<FONT color="green">012</FONT>     *<a name="line.12"></a>
+<FONT color="green">013</FONT>     * This program is distributed in the hope that it will be useful,<a name="line.13"></a>
+<FONT color="green">014</FONT>     * but WITHOUT ANY WARRANTY; without even the implied warranty of<a name="line.14"></a>
+<FONT color="green">015</FONT>     * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the<a name="line.15"></a>
+<FONT color="green">016</FONT>     * GNU General Public License for more details.<a name="line.16"></a>
+<FONT color="green">017</FONT>     *<a name="line.17"></a>
+<FONT color="green">018</FONT>     * You should have received a copy of the GNU General Public License<a name="line.18"></a>
+<FONT color="green">019</FONT>     * along with this program; if not, see &lt;http://www.gnu.org/licenses&gt;.<a name="line.19"></a>
+<FONT color="green">020</FONT>     */<a name="line.20"></a>
+<FONT color="green">021</FONT>    package com.unboundid.util.json;<a name="line.21"></a>
+<FONT color="green">022</FONT>    <a name="line.22"></a>
+<FONT color="green">023</FONT>    <a name="line.23"></a>
+<FONT color="green">024</FONT>    <a name="line.24"></a>
+<FONT color="green">025</FONT>    import com.unboundid.util.NotMutable;<a name="line.25"></a>
+<FONT color="green">026</FONT>    import com.unboundid.util.StaticUtils;<a name="line.26"></a>
+<FONT color="green">027</FONT>    import com.unboundid.util.ThreadSafety;<a name="line.27"></a>
+<FONT color="green">028</FONT>    import com.unboundid.util.ThreadSafetyLevel;<a name="line.28"></a>
+<FONT color="green">029</FONT>    <a name="line.29"></a>
+<FONT color="green">030</FONT>    <a name="line.30"></a>
+<FONT color="green">031</FONT>    <a name="line.31"></a>
+<FONT color="green">032</FONT>    /**<a name="line.32"></a>
+<FONT color="green">033</FONT>     * This class provides an implementation of a JSON value that represents a<a name="line.33"></a>
+<FONT color="green">034</FONT>     * string of Unicode characters.  The string representation of a JSON string<a name="line.34"></a>
+<FONT color="green">035</FONT>     * must start and end with the double quotation mark character, and a Unicode<a name="line.35"></a>
+<FONT color="green">036</FONT>     * (preferably UTF-8) representation of the string between the quotes.  The<a name="line.36"></a>
+<FONT color="green">037</FONT>     * following special characters must be escaped:<a name="line.37"></a>
+<FONT color="green">038</FONT>     * &lt;UL&gt;<a name="line.38"></a>
+<FONT color="green">039</FONT>     *   &lt;LI&gt;<a name="line.39"></a>
+<FONT color="green">040</FONT>     *     The double quotation mark (Unicode character U+0022) must be escaped as<a name="line.40"></a>
+<FONT color="green">041</FONT>     *     either {@code \"} or {@code \}{@code u0022}.<a name="line.41"></a>
+<FONT color="green">042</FONT>     *   &lt;/LI&gt;<a name="line.42"></a>
+<FONT color="green">043</FONT>     *   &lt;LI&gt;<a name="line.43"></a>
+<FONT color="green">044</FONT>     *     The backslash (Unicode character U+005C) must be escaped as either<a name="line.44"></a>
+<FONT color="green">045</FONT>     *     {@code \\} or {@code \}{@code u005C}.<a name="line.45"></a>
+<FONT color="green">046</FONT>     *   &lt;/LI&gt;<a name="line.46"></a>
+<FONT color="green">047</FONT>     *   &lt;LI&gt;<a name="line.47"></a>
+<FONT color="green">048</FONT>     *     All ASCII control characters (Unicode characters U+0000 through U+001F)<a name="line.48"></a>
+<FONT color="green">049</FONT>     *     must be escaped.  They can all be escaped by prefixing the<a name="line.49"></a>
+<FONT color="green">050</FONT>     *     four-hexadecimal-digit Unicode character code with {@code \}{@code u},<a name="line.50"></a>
+<FONT color="green">051</FONT>     *     like {@code \}{@code u0000} to represent the ASCII null character U+0000.<a name="line.51"></a>
+<FONT color="green">052</FONT>     *     For certain characters, a more user-friendly escape sequence is also<a name="line.52"></a>
+<FONT color="green">053</FONT>     *     defined:<a name="line.53"></a>
+<FONT color="green">054</FONT>     *     &lt;UL&gt;<a name="line.54"></a>
+<FONT color="green">055</FONT>     *       &lt;LI&gt;<a name="line.55"></a>
+<FONT color="green">056</FONT>     *         The horizontal tab character can be escaped as either {@code \t} or<a name="line.56"></a>
+<FONT color="green">057</FONT>     *         {@code \}{@code u0009}.<a name="line.57"></a>
+<FONT color="green">058</FONT>     *       &lt;/LI&gt;<a name="line.58"></a>
+<FONT color="green">059</FONT>     *       &lt;LI&gt;<a name="line.59"></a>
+<FONT color="green">060</FONT>     *         The newline character can be escaped as either {@code \n} or<a name="line.60"></a>
+<FONT color="green">061</FONT>     *         {@code \}{@code u000A}.<a name="line.61"></a>
+<FONT color="green">062</FONT>     *       &lt;/LI&gt;<a name="line.62"></a>
+<FONT color="green">063</FONT>     *       &lt;LI&gt;<a name="line.63"></a>
+<FONT color="green">064</FONT>     *         The formfeed character can be escaped as either {@code \f} or<a name="line.64"></a>
+<FONT color="green">065</FONT>     *         {@code \}{@code u000C}.<a name="line.65"></a>
+<FONT color="green">066</FONT>     *       &lt;/LI&gt;<a name="line.66"></a>
+<FONT color="green">067</FONT>     *       &lt;LI&gt;<a name="line.67"></a>
+<FONT color="green">068</FONT>     *         The carriage return character can be escaped as either {@code \r} or<a name="line.68"></a>
+<FONT color="green">069</FONT>     *         {@code \}{@code u000D}.<a name="line.69"></a>
+<FONT color="green">070</FONT>     *       &lt;/LI&gt;<a name="line.70"></a>
+<FONT color="green">071</FONT>     *     &lt;/UL&gt;<a name="line.71"></a>
+<FONT color="green">072</FONT>     *   &lt;/LI&gt;<a name="line.72"></a>
+<FONT color="green">073</FONT>     * &lt;/UL&gt;<a name="line.73"></a>
+<FONT color="green">074</FONT>     * In addition, any other character may optionally be escaped by placing the<a name="line.74"></a>
+<FONT color="green">075</FONT>     * {@code \}{@code u} prefix in front of each four-hexadecimal digit sequence in<a name="line.75"></a>
+<FONT color="green">076</FONT>     * the UTF-16 representation of that character.  For example, the "LATIN SMALL<a name="line.76"></a>
+<FONT color="green">077</FONT>     * LETTER N WITH TILDE" character U+00F1 may be escaped as<a name="line.77"></a>
+<FONT color="green">078</FONT>     * {@code \}{@code u00F1}, while the "MUSICAL SYMBOL G CLEF" character U+1D11E<a name="line.78"></a>
+<FONT color="green">079</FONT>     * may be escaped as {@code \}{@code uD834}{@code \}{@code uDD1E}.  And while<a name="line.79"></a>
+<FONT color="green">080</FONT>     * the forward slash character is not required to be escaped in JSON strings, it<a name="line.80"></a>
+<FONT color="green">081</FONT>     * can be escaped using {@code \/} as a more human-readable alternative to<a name="line.81"></a>
+<FONT color="green">082</FONT>     * {@code \}{@code u002F}.<a name="line.82"></a>
+<FONT color="green">083</FONT>     * &lt;BR&gt;&lt;BR&gt;<a name="line.83"></a>
+<FONT color="green">084</FONT>     * The string provided to the {@link #JSONString(String)} constructor should not<a name="line.84"></a>
+<FONT color="green">085</FONT>     * have any escaping performed, and the string returned by the<a name="line.85"></a>
+<FONT color="green">086</FONT>     * {@link #stringValue()} method will not have any escaping performed.  These<a name="line.86"></a>
+<FONT color="green">087</FONT>     * methods work with the Java string that is represented by the JSON string.<a name="line.87"></a>
+<FONT color="green">088</FONT>     * &lt;BR&gt;&lt;BR&gt;<a name="line.88"></a>
+<FONT color="green">089</FONT>     * If this JSON string was parsed from the string representation of a JSON<a name="line.89"></a>
+<FONT color="green">090</FONT>     * object, then the value returned by the {@link #toString()} method (or<a name="line.90"></a>
+<FONT color="green">091</FONT>     * appended to the buffer provided to the {@link #toString(StringBuilder)}<a name="line.91"></a>
+<FONT color="green">092</FONT>     * method) will be the string representation used in the JSON object that was<a name="line.92"></a>
+<FONT color="green">093</FONT>     * parsed.  Otherwise, this class will generate an appropriate string<a name="line.93"></a>
+<FONT color="green">094</FONT>     * representation, which will be surrounded by quotation marks and will have the<a name="line.94"></a>
+<FONT color="green">095</FONT>     * minimal required encoding applied.<a name="line.95"></a>
+<FONT color="green">096</FONT>     * &lt;BR&gt;&lt;BR&gt;<a name="line.96"></a>
+<FONT color="green">097</FONT>     * The string returned by the {@link #toNormalizedString()} method (or appended<a name="line.97"></a>
+<FONT color="green">098</FONT>     * to the buffer provided to the {@link #toNormalizedString(StringBuilder)}<a name="line.98"></a>
+<FONT color="green">099</FONT>     * method) will be generated by converting it to lowercase, surrounding it with<a name="line.99"></a>
+<FONT color="green">100</FONT>     * quotation marks, and using the {@code \}{@code u}-style escaping for all<a name="line.100"></a>
+<FONT color="green">101</FONT>     * characters other than the following (as contained in the LDAP printable<a name="line.101"></a>
+<FONT color="green">102</FONT>     * character set defined in &lt;A HREF="http://www.ietf.org/rfc/rfc4517.txt"&gt;RFC<a name="line.102"></a>
+<FONT color="green">103</FONT>     * 4517&lt;/A&gt; section 3.2, and indicated by the<a name="line.103"></a>
+<FONT color="green">104</FONT>     * {@link StaticUtils#isPrintable(char)} method):<a name="line.104"></a>
+<FONT color="green">105</FONT>     * &lt;UL&gt;<a name="line.105"></a>
+<FONT color="green">106</FONT>     *   &lt;LI&gt;All uppercase ASCII alphabetic letters (U+0041 through U+005A).&lt;/LI&gt;<a name="line.106"></a>
+<FONT color="green">107</FONT>     *   &lt;LI&gt;All lowercase ASCII alphabetic letters (U+0061 through U+007A).&lt;/LI&gt;<a name="line.107"></a>
+<FONT color="green">108</FONT>     *   &lt;LI&gt;All ASCII numeric digits (U+0030 through U+0039).&lt;/LI&gt;<a name="line.108"></a>
+<FONT color="green">109</FONT>     *   &lt;LI&gt;The ASCII space character U+0020.&lt;/LI&gt;<a name="line.109"></a>
+<FONT color="green">110</FONT>     *   &lt;LI&gt;The ASCII single quote (aka apostrophe) character U+0027.&lt;/LI&gt;<a name="line.110"></a>
+<FONT color="green">111</FONT>     *   &lt;LI&gt;The ASCII left parenthesis character U+0028.&lt;/LI&gt;<a name="line.111"></a>
+<FONT color="green">112</FONT>     *   &lt;LI&gt;The ASCII right parenthesis character U+0029.&lt;/LI&gt;<a name="line.112"></a>
+<FONT color="green">113</FONT>     *   &lt;LI&gt;The ASCII plus sign character U+002B.&lt;/LI&gt;<a name="line.113"></a>
+<FONT color="green">114</FONT>     *   &lt;LI&gt;The ASCII comma character U+002C.&lt;/LI&gt;<a name="line.114"></a>
+<FONT color="green">115</FONT>     *   &lt;LI&gt;The ASCII minus sign (aka hyphen) character U+002D.&lt;/LI&gt;<a name="line.115"></a>
+<FONT color="green">116</FONT>     *   &lt;LI&gt;The ASCII period character U+002E.&lt;/LI&gt;<a name="line.116"></a>
+<FONT color="green">117</FONT>     *   &lt;LI&gt;The ASCII forward slash character U+002F.&lt;/LI&gt;<a name="line.117"></a>
+<FONT color="green">118</FONT>     *   &lt;LI&gt;The ASCII colon character U+003A.&lt;/LI&gt;<a name="line.118"></a>
+<FONT color="green">119</FONT>     *   &lt;LI&gt;The ASCII equals sign character U+003D.&lt;/LI&gt;<a name="line.119"></a>
+<FONT color="green">120</FONT>     *   &lt;LI&gt;The ASCII question mark character U+003F.&lt;/LI&gt;<a name="line.120"></a>
+<FONT color="green">121</FONT>     * &lt;/UL&gt;<a name="line.121"></a>
+<FONT color="green">122</FONT>     */<a name="line.122"></a>
+<FONT color="green">123</FONT>    @NotMutable()<a name="line.123"></a>
+<FONT color="green">124</FONT>    @ThreadSafety(level=ThreadSafetyLevel.COMPLETELY_THREADSAFE)<a name="line.124"></a>
+<FONT color="green">125</FONT>    public final class JSONString<a name="line.125"></a>
+<FONT color="green">126</FONT>           extends JSONValue<a name="line.126"></a>
+<FONT color="green">127</FONT>    {<a name="line.127"></a>
+<FONT color="green">128</FONT>      /**<a name="line.128"></a>
+<FONT color="green">129</FONT>       * The serial version UID for this serializable class.<a name="line.129"></a>
+<FONT color="green">130</FONT>       */<a name="line.130"></a>
+<FONT color="green">131</FONT>      private static final long serialVersionUID = -4677194657299153890L;<a name="line.131"></a>
+<FONT color="green">132</FONT>    <a name="line.132"></a>
+<FONT color="green">133</FONT>    <a name="line.133"></a>
+<FONT color="green">134</FONT>    <a name="line.134"></a>
+<FONT color="green">135</FONT>      // The JSON-formatted string representation for this JSON string.  It will be<a name="line.135"></a>
+<FONT color="green">136</FONT>      // surrounded by quotation marks and any necessary escaping will have been<a name="line.136"></a>
+<FONT color="green">137</FONT>      // performed.<a name="line.137"></a>
+<FONT color="green">138</FONT>      private String jsonStringRepresentation;<a name="line.138"></a>
+<FONT color="green">139</FONT>    <a name="line.139"></a>
+<FONT color="green">140</FONT>      // The string value for this object.<a name="line.140"></a>
+<FONT color="green">141</FONT>      private final String value;<a name="line.141"></a>
+<FONT color="green">142</FONT>    <a name="line.142"></a>
+<FONT color="green">143</FONT>    <a name="line.143"></a>
+<FONT color="green">144</FONT>    <a name="line.144"></a>
+<FONT color="green">145</FONT>      /**<a name="line.145"></a>
+<FONT color="green">146</FONT>       * Creates a new JSON string.<a name="line.146"></a>
+<FONT color="green">147</FONT>       *<a name="line.147"></a>
+<FONT color="green">148</FONT>       * @param  value  The string to represent in this JSON value.  It must not be<a name="line.148"></a>
+<FONT color="green">149</FONT>       *                {@code null}.<a name="line.149"></a>
+<FONT color="green">150</FONT>       */<a name="line.150"></a>
+<FONT color="green">151</FONT>      public JSONString(final String value)<a name="line.151"></a>
+<FONT color="green">152</FONT>      {<a name="line.152"></a>
+<FONT color="green">153</FONT>        this.value = value;<a name="line.153"></a>
+<FONT color="green">154</FONT>        jsonStringRepresentation = null;<a name="line.154"></a>
+<FONT color="green">155</FONT>      }<a name="line.155"></a>
+<FONT color="green">156</FONT>    <a name="line.156"></a>
+<FONT color="green">157</FONT>    <a name="line.157"></a>
+<FONT color="green">158</FONT>    <a name="line.158"></a>
+<FONT color="green">159</FONT>      /**<a name="line.159"></a>
+<FONT color="green">160</FONT>       * Creates a new JSON string.  This method should be used for strings parsed<a name="line.160"></a>
+<FONT color="green">161</FONT>       * from the string representation of a JSON object.<a name="line.161"></a>
+<FONT color="green">162</FONT>       *<a name="line.162"></a>
+<FONT color="green">163</FONT>       * @param  javaString  The Java string to represent.<a name="line.163"></a>
+<FONT color="green">164</FONT>       * @param  jsonString  The JSON string representation to use for the Java<a name="line.164"></a>
+<FONT color="green">165</FONT>       *                     string.<a name="line.165"></a>
+<FONT color="green">166</FONT>       */<a name="line.166"></a>
+<FONT color="green">167</FONT>      JSONString(final String javaString, final String jsonString)<a name="line.167"></a>
+<FONT color="green">168</FONT>      {<a name="line.168"></a>
+<FONT color="green">169</FONT>        value = javaString;<a name="line.169"></a>
+<FONT color="green">170</FONT>        jsonStringRepresentation = jsonString;<a name="line.170"></a>
+<FONT color="green">171</FONT>      }<a name="line.171"></a>
+<FONT color="green">172</FONT>    <a name="line.172"></a>
+<FONT color="green">173</FONT>    <a name="line.173"></a>
+<FONT color="green">174</FONT>    <a name="line.174"></a>
+<FONT color="green">175</FONT>      /**<a name="line.175"></a>
+<FONT color="green">176</FONT>       * Retrieves the string value for this object.  This will be the interpreted<a name="line.176"></a>
+<FONT color="green">177</FONT>       * value, without the surrounding quotation marks or escaping.<a name="line.177"></a>
+<FONT color="green">178</FONT>       *<a name="line.178"></a>
+<FONT color="green">179</FONT>       * @return  The string value for this object.<a name="line.179"></a>
+<FONT color="green">180</FONT>       */<a name="line.180"></a>
+<FONT color="green">181</FONT>      public String stringValue()<a name="line.181"></a>
+<FONT color="green">182</FONT>      {<a name="line.182"></a>
+<FONT color="green">183</FONT>        return value;<a name="line.183"></a>
+<FONT color="green">184</FONT>      }<a name="line.184"></a>
+<FONT color="green">185</FONT>    <a name="line.185"></a>
+<FONT color="green">186</FONT>    <a name="line.186"></a>
+<FONT color="green">187</FONT>    <a name="line.187"></a>
+<FONT color="green">188</FONT>      /**<a name="line.188"></a>
+<FONT color="green">189</FONT>       * {@inheritDoc}<a name="line.189"></a>
+<FONT color="green">190</FONT>       */<a name="line.190"></a>
+<FONT color="green">191</FONT>      @Override()<a name="line.191"></a>
+<FONT color="green">192</FONT>      public int hashCode()<a name="line.192"></a>
+<FONT color="green">193</FONT>      {<a name="line.193"></a>
+<FONT color="green">194</FONT>        return stringValue().hashCode();<a name="line.194"></a>
+<FONT color="green">195</FONT>      }<a name="line.195"></a>
+<FONT color="green">196</FONT>    <a name="line.196"></a>
+<FONT color="green">197</FONT>    <a name="line.197"></a>
+<FONT color="green">198</FONT>    <a name="line.198"></a>
+<FONT color="green">199</FONT>      /**<a name="line.199"></a>
+<FONT color="green">200</FONT>       * {@inheritDoc}<a name="line.200"></a>
+<FONT color="green">201</FONT>       */<a name="line.201"></a>
+<FONT color="green">202</FONT>      @Override()<a name="line.202"></a>
+<FONT color="green">203</FONT>      public boolean equals(final Object o)<a name="line.203"></a>
+<FONT color="green">204</FONT>      {<a name="line.204"></a>
+<FONT color="green">205</FONT>        if (o == this)<a name="line.205"></a>
+<FONT color="green">206</FONT>        {<a name="line.206"></a>
+<FONT color="green">207</FONT>          return true;<a name="line.207"></a>
+<FONT color="green">208</FONT>        }<a name="line.208"></a>
+<FONT color="green">209</FONT>    <a name="line.209"></a>
+<FONT color="green">210</FONT>        if (o instanceof JSONString)<a name="line.210"></a>
+<FONT color="green">211</FONT>        {<a name="line.211"></a>
+<FONT color="green">212</FONT>          final JSONString s = (JSONString) o;<a name="line.212"></a>
+<FONT color="green">213</FONT>          return value.equals(s.value);<a name="line.213"></a>
+<FONT color="green">214</FONT>        }<a name="line.214"></a>
+<FONT color="green">215</FONT>    <a name="line.215"></a>
+<FONT color="green">216</FONT>        return false;<a name="line.216"></a>
+<FONT color="green">217</FONT>      }<a name="line.217"></a>
+<FONT color="green">218</FONT>    <a name="line.218"></a>
+<FONT color="green">219</FONT>    <a name="line.219"></a>
+<FONT color="green">220</FONT>    <a name="line.220"></a>
+<FONT color="green">221</FONT>      /**<a name="line.221"></a>
+<FONT color="green">222</FONT>       * Indicates whether the value of this JSON string matches that of the<a name="line.222"></a>
+<FONT color="green">223</FONT>       * provided string, optionally ignoring differences in capitalization.<a name="line.223"></a>
+<FONT color="green">224</FONT>       *<a name="line.224"></a>
+<FONT color="green">225</FONT>       * @param  s           The JSON string to compare against this JSON string.<a name="line.225"></a>
+<FONT color="green">226</FONT>       *                     It must not be {@code null}.<a name="line.226"></a>
+<FONT color="green">227</FONT>       * @param  ignoreCase  Indicates whether to ignore differences in<a name="line.227"></a>
+<FONT color="green">228</FONT>       *                     capitalization.<a name="line.228"></a>
+<FONT color="green">229</FONT>       *<a name="line.229"></a>
+<FONT color="green">230</FONT>       * @return  {@code true} if the value of this JSON string matches the value of<a name="line.230"></a>
+<FONT color="green">231</FONT>       *          the provided string (optionally ignoring differences in<a name="line.231"></a>
+<FONT color="green">232</FONT>       *          capitalization), or {@code false} if not.<a name="line.232"></a>
+<FONT color="green">233</FONT>       */<a name="line.233"></a>
+<FONT color="green">234</FONT>      public boolean equals(final JSONString s, final boolean ignoreCase)<a name="line.234"></a>
+<FONT color="green">235</FONT>      {<a name="line.235"></a>
+<FONT color="green">236</FONT>        if (ignoreCase)<a name="line.236"></a>
+<FONT color="green">237</FONT>        {<a name="line.237"></a>
+<FONT color="green">238</FONT>          return value.equalsIgnoreCase(s.value);<a name="line.238"></a>
+<FONT color="green">239</FONT>        }<a name="line.239"></a>
+<FONT color="green">240</FONT>        else<a name="line.240"></a>
+<FONT color="green">241</FONT>        {<a name="line.241"></a>
+<FONT color="green">242</FONT>          return value.equals(s.value);<a name="line.242"></a>
+<FONT color="green">243</FONT>        }<a name="line.243"></a>
+<FONT color="green">244</FONT>      }<a name="line.244"></a>
+<FONT color="green">245</FONT>    <a name="line.245"></a>
+<FONT color="green">246</FONT>    <a name="line.246"></a>
+<FONT color="green">247</FONT>    <a name="line.247"></a>
+<FONT color="green">248</FONT>      /**<a name="line.248"></a>
+<FONT color="green">249</FONT>       * {@inheritDoc}<a name="line.249"></a>
+<FONT color="green">250</FONT>       */<a name="line.250"></a>
+<FONT color="green">251</FONT>      @Override()<a name="line.251"></a>
+<FONT color="green">252</FONT>      public boolean equals(final JSONValue v, final boolean ignoreFieldNameCase,<a name="line.252"></a>
+<FONT color="green">253</FONT>                            final boolean ignoreValueCase,<a name="line.253"></a>
+<FONT color="green">254</FONT>                            final boolean ignoreArrayOrder)<a name="line.254"></a>
+<FONT color="green">255</FONT>      {<a name="line.255"></a>
+<FONT color="green">256</FONT>        return ((v instanceof JSONString) &amp;&amp;<a name="line.256"></a>
+<FONT color="green">257</FONT>             equals((JSONString) v, ignoreValueCase));<a name="line.257"></a>
+<FONT color="green">258</FONT>      }<a name="line.258"></a>
+<FONT color="green">259</FONT>    <a name="line.259"></a>
+<FONT color="green">260</FONT>    <a name="line.260"></a>
+<FONT color="green">261</FONT>    <a name="line.261"></a>
+<FONT color="green">262</FONT>      /**<a name="line.262"></a>
+<FONT color="green">263</FONT>       * {@inheritDoc}<a name="line.263"></a>
+<FONT color="green">264</FONT>       */<a name="line.264"></a>
+<FONT color="green">265</FONT>      @Override()<a name="line.265"></a>
+<FONT color="green">266</FONT>      public String toString()<a name="line.266"></a>
+<FONT color="green">267</FONT>      {<a name="line.267"></a>
+<FONT color="green">268</FONT>        if (jsonStringRepresentation == null)<a name="line.268"></a>
+<FONT color="green">269</FONT>        {<a name="line.269"></a>
+<FONT color="green">270</FONT>          final StringBuilder buffer = new StringBuilder();<a name="line.270"></a>
+<FONT color="green">271</FONT>          toString(buffer);<a name="line.271"></a>
+<FONT color="green">272</FONT>          jsonStringRepresentation = buffer.toString();<a name="line.272"></a>
+<FONT color="green">273</FONT>        }<a name="line.273"></a>
+<FONT color="green">274</FONT>    <a name="line.274"></a>
+<FONT color="green">275</FONT>        return jsonStringRepresentation;<a name="line.275"></a>
+<FONT color="green">276</FONT>      }<a name="line.276"></a>
+<FONT color="green">277</FONT>    <a name="line.277"></a>
+<FONT color="green">278</FONT>    <a name="line.278"></a>
+<FONT color="green">279</FONT>    <a name="line.279"></a>
+<FONT color="green">280</FONT>      /**<a name="line.280"></a>
+<FONT color="green">281</FONT>       * {@inheritDoc}<a name="line.281"></a>
+<FONT color="green">282</FONT>       */<a name="line.282"></a>
+<FONT color="green">283</FONT>      @Override()<a name="line.283"></a>
+<FONT color="green">284</FONT>      public void toString(final StringBuilder buffer)<a name="line.284"></a>
+<FONT color="green">285</FONT>      {<a name="line.285"></a>
+<FONT color="green">286</FONT>        if (jsonStringRepresentation != null)<a name="line.286"></a>
+<FONT color="green">287</FONT>        {<a name="line.287"></a>
+<FONT color="green">288</FONT>          buffer.append(jsonStringRepresentation);<a name="line.288"></a>
+<FONT color="green">289</FONT>        }<a name="line.289"></a>
+<FONT color="green">290</FONT>        else<a name="line.290"></a>
+<FONT color="green">291</FONT>        {<a name="line.291"></a>
+<FONT color="green">292</FONT>          final boolean emptyBufferProvided = (buffer.length() == 0);<a name="line.292"></a>
+<FONT color="green">293</FONT>          encodeString(value, buffer);<a name="line.293"></a>
+<FONT color="green">294</FONT>    <a name="line.294"></a>
+<FONT color="green">295</FONT>          if (emptyBufferProvided)<a name="line.295"></a>
+<FONT color="green">296</FONT>          {<a name="line.296"></a>
+<FONT color="green">297</FONT>            jsonStringRepresentation = buffer.toString();<a name="line.297"></a>
+<FONT color="green">298</FONT>          }<a name="line.298"></a>
+<FONT color="green">299</FONT>        }<a name="line.299"></a>
+<FONT color="green">300</FONT>      }<a name="line.300"></a>
+<FONT color="green">301</FONT>    <a name="line.301"></a>
+<FONT color="green">302</FONT>    <a name="line.302"></a>
+<FONT color="green">303</FONT>    <a name="line.303"></a>
+<FONT color="green">304</FONT>      /**<a name="line.304"></a>
+<FONT color="green">305</FONT>       * {@inheritDoc}<a name="line.305"></a>
+<FONT color="green">306</FONT>       */<a name="line.306"></a>
+<FONT color="green">307</FONT>      @Override()<a name="line.307"></a>
+<FONT color="green">308</FONT>      public String toSingleLineString()<a name="line.308"></a>
+<FONT color="green">309</FONT>      {<a name="line.309"></a>
+<FONT color="green">310</FONT>        return toString();<a name="line.310"></a>
+<FONT color="green">311</FONT>      }<a name="line.311"></a>
+<FONT color="green">312</FONT>    <a name="line.312"></a>
+<FONT color="green">313</FONT>    <a name="line.313"></a>
+<FONT color="green">314</FONT>    <a name="line.314"></a>
+<FONT color="green">315</FONT>      /**<a name="line.315"></a>
+<FONT color="green">316</FONT>       * {@inheritDoc}<a name="line.316"></a>
+<FONT color="green">317</FONT>       */<a name="line.317"></a>
+<FONT color="green">318</FONT>      @Override()<a name="line.318"></a>
+<FONT color="green">319</FONT>      public void toSingleLineString(final StringBuilder buffer)<a name="line.319"></a>
+<FONT color="green">320</FONT>      {<a name="line.320"></a>
+<FONT color="green">321</FONT>        toString(buffer);<a name="line.321"></a>
+<FONT color="green">322</FONT>      }<a name="line.322"></a>
+<FONT color="green">323</FONT>    <a name="line.323"></a>
+<FONT color="green">324</FONT>    <a name="line.324"></a>
+<FONT color="green">325</FONT>    <a name="line.325"></a>
+<FONT color="green">326</FONT>      /**<a name="line.326"></a>
+<FONT color="green">327</FONT>       * Appends a minimally-escaped JSON representation of the provided string to<a name="line.327"></a>
+<FONT color="green">328</FONT>       * the given buffer.  When escaping is required, the most user-friendly form<a name="line.328"></a>
+<FONT color="green">329</FONT>       * of escaping will be used.<a name="line.329"></a>
+<FONT color="green">330</FONT>       *<a name="line.330"></a>
+<FONT color="green">331</FONT>       * @param  s       The string to be encoded.<a name="line.331"></a>
+<FONT color="green">332</FONT>       * @param  buffer  The buffer to which the encoded representation should be<a name="line.332"></a>
+<FONT color="green">333</FONT>       *                 appended.<a name="line.333"></a>
+<FONT color="green">334</FONT>       */<a name="line.334"></a>
+<FONT color="green">335</FONT>      static void encodeString(final String s, final StringBuilder buffer)<a name="line.335"></a>
+<FONT color="green">336</FONT>      {<a name="line.336"></a>
+<FONT color="green">337</FONT>        buffer.append('"');<a name="line.337"></a>
+<FONT color="green">338</FONT>    <a name="line.338"></a>
+<FONT color="green">339</FONT>        for (final char c : s.toCharArray())<a name="line.339"></a>
+<FONT color="green">340</FONT>        {<a name="line.340"></a>
+<FONT color="green">341</FONT>          switch (c)<a name="line.341"></a>
+<FONT color="green">342</FONT>          {<a name="line.342"></a>
+<FONT color="green">343</FONT>            case '"':<a name="line.343"></a>
+<FONT color="green">344</FONT>              buffer.append("\\\"");<a name="line.344"></a>
+<FONT color="green">345</FONT>              break;<a name="line.345"></a>
+<FONT color="green">346</FONT>            case '\\':<a name="line.346"></a>
+<FONT color="green">347</FONT>              buffer.append("\\\\");<a name="line.347"></a>
+<FONT color="green">348</FONT>              break;<a name="line.348"></a>
+<FONT color="green">349</FONT>            case '\b': // backspace<a name="line.349"></a>
+<FONT color="green">350</FONT>              buffer.append("\\b");<a name="line.350"></a>
+<FONT color="green">351</FONT>              break;<a name="line.351"></a>
+<FONT color="green">352</FONT>            case '\f': // formfeed<a name="line.352"></a>
+<FONT color="green">353</FONT>              buffer.append("\\f");<a name="line.353"></a>
+<FONT color="green">354</FONT>              break;<a name="line.354"></a>
+<FONT color="green">355</FONT>            case '\n': // newline<a name="line.355"></a>
+<FONT color="green">356</FONT>              buffer.append("\\n");<a name="line.356"></a>
+<FONT color="green">357</FONT>              break;<a name="line.357"></a>
+<FONT color="green">358</FONT>            case '\r': // carriage return<a name="line.358"></a>
+<FONT color="green">359</FONT>              buffer.append("\\r");<a name="line.359"></a>
+<FONT color="green">360</FONT>              break;<a name="line.360"></a>
+<FONT color="green">361</FONT>            case '\t': // horizontal tab<a name="line.361"></a>
+<FONT color="green">362</FONT>              buffer.append("\\t");<a name="line.362"></a>
+<FONT color="green">363</FONT>              break;<a name="line.363"></a>
+<FONT color="green">364</FONT>            default:<a name="line.364"></a>
+<FONT color="green">365</FONT>              if (c &lt;= '\u001F')<a name="line.365"></a>
+<FONT color="green">366</FONT>              {<a name="line.366"></a>
+<FONT color="green">367</FONT>                buffer.append("\\u");<a name="line.367"></a>
+<FONT color="green">368</FONT>                buffer.append(String.format("%04X", (int) c));<a name="line.368"></a>
+<FONT color="green">369</FONT>              }<a name="line.369"></a>
+<FONT color="green">370</FONT>              else<a name="line.370"></a>
+<FONT color="green">371</FONT>              {<a name="line.371"></a>
+<FONT color="green">372</FONT>                buffer.append(c);<a name="line.372"></a>
+<FONT color="green">373</FONT>              }<a name="line.373"></a>
+<FONT color="green">374</FONT>              break;<a name="line.374"></a>
+<FONT color="green">375</FONT>          }<a name="line.375"></a>
+<FONT color="green">376</FONT>        }<a name="line.376"></a>
+<FONT color="green">377</FONT>    <a name="line.377"></a>
+<FONT color="green">378</FONT>        buffer.append('"');<a name="line.378"></a>
+<FONT color="green">379</FONT>      }<a name="line.379"></a>
+<FONT color="green">380</FONT>    <a name="line.380"></a>
+<FONT color="green">381</FONT>    <a name="line.381"></a>
+<FONT color="green">382</FONT>    <a name="line.382"></a>
+<FONT color="green">383</FONT>      /**<a name="line.383"></a>
+<FONT color="green">384</FONT>       * {@inheritDoc}<a name="line.384"></a>
+<FONT color="green">385</FONT>       */<a name="line.385"></a>
+<FONT color="green">386</FONT>      @Override()<a name="line.386"></a>
+<FONT color="green">387</FONT>      public String toNormalizedString()<a name="line.387"></a>
+<FONT color="green">388</FONT>      {<a name="line.388"></a>
+<FONT color="green">389</FONT>        final StringBuilder buffer = new StringBuilder();<a name="line.389"></a>
+<FONT color="green">390</FONT>        toNormalizedString(buffer);<a name="line.390"></a>
+<FONT color="green">391</FONT>        return buffer.toString();<a name="line.391"></a>
+<FONT color="green">392</FONT>      }<a name="line.392"></a>
+<FONT color="green">393</FONT>    <a name="line.393"></a>
+<FONT color="green">394</FONT>    <a name="line.394"></a>
+<FONT color="green">395</FONT>    <a name="line.395"></a>
+<FONT color="green">396</FONT>      /**<a name="line.396"></a>
+<FONT color="green">397</FONT>       * {@inheritDoc}<a name="line.397"></a>
+<FONT color="green">398</FONT>       */<a name="line.398"></a>
+<FONT color="green">399</FONT>      @Override()<a name="line.399"></a>
+<FONT color="green">400</FONT>      public void toNormalizedString(final StringBuilder buffer)<a name="line.400"></a>
+<FONT color="green">401</FONT>      {<a name="line.401"></a>
+<FONT color="green">402</FONT>        buffer.append('"');<a name="line.402"></a>
+<FONT color="green">403</FONT>    <a name="line.403"></a>
+<FONT color="green">404</FONT>        for (final char c : value.toLowerCase().toCharArray())<a name="line.404"></a>
+<FONT color="green">405</FONT>        {<a name="line.405"></a>
+<FONT color="green">406</FONT>          if (StaticUtils.isPrintable(c))<a name="line.406"></a>
+<FONT color="green">407</FONT>          {<a name="line.407"></a>
+<FONT color="green">408</FONT>            buffer.append(c);<a name="line.408"></a>
+<FONT color="green">409</FONT>          }<a name="line.409"></a>
+<FONT color="green">410</FONT>          else<a name="line.410"></a>
+<FONT color="green">411</FONT>          {<a name="line.411"></a>
+<FONT color="green">412</FONT>            buffer.append("\\u");<a name="line.412"></a>
+<FONT color="green">413</FONT>            buffer.append(String.format("%04X", (int) c));<a name="line.413"></a>
+<FONT color="green">414</FONT>          }<a name="line.414"></a>
+<FONT color="green">415</FONT>        }<a name="line.415"></a>
+<FONT color="green">416</FONT>    <a name="line.416"></a>
+<FONT color="green">417</FONT>        buffer.append('"');<a name="line.417"></a>
+<FONT color="green">418</FONT>      }<a name="line.418"></a>
+<FONT color="green">419</FONT>    }<a name="line.419"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

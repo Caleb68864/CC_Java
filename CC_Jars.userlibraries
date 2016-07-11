@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="WINDOWS-1252" standalone="no"?>
+<eclipse-userlibraries version="2">
+    <library name="CC_Jars" systemlibrary="false">
+        <archive javadoc="http://docs.guava-libraries.googlecode.com/git/javadoc/" path="/CC_Library/Extra_Jars/guava-10.0.1.jar"/>
+        <archive javadoc="http://jsoup.org/apidocs/" path="/CC_Library/Extra_Jars/Jsoup/jsoup-1.6.1.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/Apache/commons-email-1.2/commons-email-1.2-javadoc.jar!/" path="/CC_Library/Extra_Jars/Apache/commons-email-1.2/commons-email-1.2.jar" source="/CC_Library/Extra_Jars/Apache/commons-email-1.2/commons-email-1.2-sources.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/javamail-1.4.4/mail-docs.jar!/docs" path="/CC_Library/Extra_Jars/javamail-1.4.4/mail.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/jodd/jodd-3.2.7-javadoc.jar!/" path="/CC_Library/Extra_Jars/jodd/jodd-3.2.7.jar" source="/CC_Library/Extra_Jars/jodd/jodd-3.2.7-sources.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/jodd/jodd-wot-3.2.7-javadoc.jar!/" path="/CC_Library/Extra_Jars/jodd/jodd-wot-3.2.7.jar" source="/CC_Library/Extra_Jars/jodd/jodd-wot-3.2.7-sources.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/mysql-connector-java-5.1.18/mysql-connector-java-5.1.18-doc.jar!/Extra_Jars/mysql-connector-java-5.1.18/docs" path="/CC_Library/Extra_Jars/mysql-connector-java-5.1.18/mysql-connector-java-5.1.18-bin.jar" source="/CC_Library/Extra_Jars/mysql-connector-java-5.1.18/src"/>
+        <archive javadoc="http://lucene.apache.org/core/3_6_0/api/core/" path="/CC_Library/Extra_Jars/lucene-3.5.0/lucene-core-3.5.0.jar"/>
+        <archive path="/CC_Library/Extra_Jars/jackcess-1.2.5.jar" source="/CC_Library/Extra_Jars/jackcess-1.2.5-sources.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/Apache/commons-logging-1.1.1/commons-logging-1.1.1-javadoc.jar!/" path="/CC_Library/Extra_Jars/Apache/commons-logging-1.1.1/commons-logging-1.1.1.jar" source="/CC_Library/Extra_Jars/Apache/commons-logging-1.1.1/commons-logging-1.1.1-sources.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/Apache/commons-lang3-3.1/commons-lang3-3.1-javadoc.jar!/" path="/CC_Library/Extra_Jars/Apache/commons-lang3-3.1/commons-lang3-3.1.jar" source="/CC_Library/Extra_Jars/Apache/commons-lang3-3.1/commons-lang3-3.1-sources.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/Apache/commons-lang-2.0/commons-lang-2.0-doc.jar!/Extra_Jars/Apache/commons-lang-2.0/docs" path="/CC_Library/Extra_Jars/Apache/commons-lang-2.0/commons-lang-2.0.jar"/>
+        <archive path="/CC_Library/Extra_Jars/Apache/apache-log4j-1.2.16/log4j-1.2.16.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/joda-time-2.0/joda-time-2.0-javadoc.jar!/" path="/CC_Library/Extra_Jars/joda-time-2.0/joda-time-2.0.jar" source="/CC_Library/Extra_Jars/joda-time-2.0/joda-time-2.0-sources.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/Apache/db-derby-10.8.2.2-bin/javadoc/derby_javadoc.jar!/Extra_Jars/Apache/db-derby-10.8.2.2-bin/javadoc/jdbc4" path="/CC_Library/Extra_Jars/Apache/db-derby-10.8.2.2-bin/lib/derby.jar"/>
+        <archive javadoc="http://www.jarvana.com/jarvana/view/net/java/dev/rome/rome/1.0.0/rome-1.0.0-javadoc.jar!/" path="/CC_Library/Extra_Jars/rome/rome-1.0.jar" source="/CC_Library/Extra_Jars/rome/rome-1.0-sources.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/jdom/build/jdom-1.1.2-javadoc.jar!/" path="/CC_Library/Extra_Jars/jdom/build/jdom-1.1.2.jar" source="/CC_Library/Extra_Jars/jdom/build/jdom-1.1.2-sources.jar"/>
+        <archive path="/CC_Library/Extra_Jars/swt-grouplayout.jar"/>
+        <archive path="/CC_Library/Extra_Jars/swing2swt.jar"/>
+        <archive path="/CC_Library/Extra_Jars/Apache/commons-fileupload-1.2.2/lib/commons-fileupload-1.2.2.jar"/>
+        <archive path="/CC_Library/Extra_Jars/zip4j_1.3.0.jar"/>
+        <archive javadoc="http://www.h2database.com/javadoc/" path="/CC_Library/Extra_Jars/h2/bin/h2-1.3.166.jar" source="/CC_Library/Extra_Jars/h2/src"/>
+        <archive javadoc="http://slick.cokeandcode.com/javadoc-util/" path="/CC_Library/Extra_Jars/slick/lib/slick.jar" source="/CC_Library/Extra_Jars/slick/src"/>
+        <archive javadoc="http://www.lwjgl.org/javadoc/" nativelibpaths="CC_Library/Extra_Jars/lwjgl-2.8.4/native/windows" path="/CC_Library/Extra_Jars/lwjgl-2.8.4/jar/lwjgl.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/Apache/commons-validator-1.4.0/commons-validator-1.4.0-javadoc.jar!/" path="/CC_Library/Extra_Jars/Apache/commons-validator-1.4.0/commons-validator-1.4.0.jar"/>
+        <archive path="/CC_Library/Extra_Jars/org.eclipse.swt.win32.win32.x86_3.7.2.v3740f.jar"/>
+    </library>
+</eclipse-userlibraries>

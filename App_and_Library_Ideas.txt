@@ -1,0 +1,24 @@
+Android App Ideas
+Complete - [Android APP] - Mil Dot Range Finder
+- [Android APP] - Watch Later Youtube Downloader - Taken/Possibly Against Terms of Service
+- [Android APP] - Message stored in Picture App
+- [Android APP] - Message encrypter
+- [Android APP] - Car Reference Manual - In Production
+Rejected - [Android APP] - Wallpaper Changer - To Manny Duplicates
+- [Android Game] - Block Missles From Reaching City with Touch
+					--Possibly grab and throw missles off course
+- [Android APP] - Expense Mileage - Taken
+- [Android APP] - Document Sync and Reader
+- [Android APP] - Tap Code Sender Receiver
+Complete - [Java APP] - Batch Image Downloader for Online Picture folders
+
+Library Ideas
+In Progres - SSH
+Complete - Derby Database
+Complete - URL Downloader
+Complete - Format Number of Decimals
+Complete - Check Arrays for Duplictes - Needs Teseting
+Complete - Copying Files
+Complete - Reading Files
+Complete - Printing Arrays to string
+Complete - Printing Lists to string

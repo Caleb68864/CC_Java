@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<eclipse-userlibraries version="2">
+    <library name="CC_Jars" systemlibrary="false">
+        <archive path="/CC_Library/Extra_Jars/guava-10.0.1.jar"/>
+        <archive path="/CC_Library/Extra_Jars/jsch-0.1.44.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/lucene-3.4.0/lucene-core-3.4.0-javadoc.jar!/" path="/CC_Library/Extra_Jars/lucene-3.4.0/lucene-core-3.4.0.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/Jsoup/jsoup-1.6.1-javadoc.jar!/" path="/CC_Library/Extra_Jars/Jsoup/jsoup-1.6.1.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/GoogleAdMobAdsSdkAndroid-4.3.1/GoogleAdMobAdsSdk-docs.jar!/docs" path="/CC_Library/Extra_Jars/GoogleAdMobAdsSdkAndroid-4.3.1/GoogleAdMobAdsSdk.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/Apache/commons-validator-1.3.1/commons-validator-docs-1.3.1.jar!/apidocs" path="/CC_Library/Extra_Jars/Apache/commons-validator-1.3.1/commons-validator-1.3.1.jar"/>
+        <archive javadoc="jar:platform:/resource/CC_Library/Extra_Jars/Apache/commons-email-1.2/commons-email-1.2-javadoc.jar!/" path="/CC_Library/Extra_Jars/Apache/commons-email-1.2/commons-email-1.2.jar" source="/CC_Library/Extra_Jars/Apache/commons-email-1.2/commons-email-1.2-sources.jar"/>
+    </library>
+</eclipse-userlibraries>
