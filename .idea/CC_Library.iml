@@ -114,7 +114,6 @@
         <jarDirectory url="file://$MODULE_DIR$/Extra_Jars" recursive="false" />
       </library>
     </orderEntry>
-    <orderEntry type="library" exported="" name="CC_Library" level="project" />
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
@@ -142,5 +141,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="CC_Library" level="application" />
   </component>
 </module>
