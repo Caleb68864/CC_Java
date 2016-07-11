@@ -5,8 +5,10 @@ package CC_Library;
 !!!!!Use CC_H2 if this class does not work!!!!!
 */
 
+
 import java.sql.*;
 import java.util.Objects;
+
 
 public class CC_Database {
     private Connection conn = null;
@@ -36,7 +38,9 @@ public class CC_Database {
             case "h2_Server":
                 strDBConnection = "jdbc:h2:tcp://" + strDBUrl;
                 break;
-
+            case "MSAccess":
+                strDBConnection = "jdbc:ucanaccess://" + strDBUrl;
+                break;
             default:
                 break;
         }
@@ -44,13 +48,13 @@ public class CC_Database {
 
     public void Connect() throws SQLException {
         try {
-            if(!Objects.equals(strDBConnection, "")){
-                conn = DriverManager.getConnection(strDBConnection,strDBUser,strDBPassword);
+            if (!Objects.equals(strDBConnection, "")) {
+                conn = DriverManager.getConnection(strDBConnection, strDBUser, strDBPassword);
                 System.out.println("Connection to " + strDBUrl + " Successful.");
             }
-        } catch (SQLException e1) {
-            e1.printStackTrace();
-        }
+        }catch(SQLException e1){
+                e1.printStackTrace();
+            }
     }
 
     public ResultSet query(String strSQL) throws SQLException {
@@ -221,6 +225,25 @@ public class CC_Database {
         }
     }
 
+    public boolean update(String strTable, String strField, String strValue, String strTestField, String strTest) throws SQLException {
+        try {
+            if(strTable != "" && strField != "" && strTestField != "") {
+                // Create a result set containing all data from strTable
+                String strSQL = "UPDATE " + strTable + " Set " + strField + "='" + strValue + "' WHERE " + strTestField + strTest + "; ";
+                System.out.println(strSQL);
+                executeQuery(strSQL);
+                System.out.println("Updated `" + strField + "` to `" + strValue + "` Where `"  + strTestField + "` " + strTest);
+                return true;
+            }else{
+                System.out.println("Failed to Update " + strField + " to "  + strValue + " Where " + strTest);
+                return false;
+            }
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+            return false;
+        }
+    }
+
     public boolean delete(String strTable, String strTestField, String strTest) throws SQLException {
         try {
             if(strTable != "" && strTestField != "") {
@@ -268,6 +291,10 @@ public class CC_Database {
 
     public static String H2_Server(){
         return "h2_Server";
+    }
+
+    public static String MSAccess(){
+        return "MSAccess";
     }
 
     public Connection getConn() {
