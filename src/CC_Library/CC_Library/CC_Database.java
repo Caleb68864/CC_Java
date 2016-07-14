@@ -7,6 +7,7 @@ package CC_Library;
 
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Objects;
 
 
@@ -109,6 +110,7 @@ public class CC_Database {
                 strSQL += " where " + strField + " " + strTest;
             }
             strSQL += ";";
+            //System.out.println(strSQL);
             Statement stmt = conn.createStatement();
             return stmt.executeQuery(strSQL);
         } catch (SQLException e) {
@@ -256,6 +258,42 @@ public class CC_Database {
                 System.out.println("Failed to Delete from " + strTable + " Where "  + strTestField + " " + strTest);
                 return false;
             }
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean insert(String strTable, ArrayList<String> alFields, ArrayList<String> alValues) throws SQLException {
+        try {
+                // Create a result set containing all data from strTable
+                String strSQL;
+                strSQL = "INSERT INTO " + strTable + " (";
+                for(String field : alFields){
+                    if(alFields.indexOf(field) != alFields.size() - 1) {
+                        strSQL += "`" + field + "`,";
+                    }else{
+                        strSQL += "`" + field + "`";
+                    }
+                }
+                strSQL += ")";
+                strSQL += " VALUES (";
+                for(String value : alValues){
+                    if(alValues.indexOf(value) != alValues.size() - 1) {
+                        strSQL += "'" + value + "',";
+                    }else{
+                        strSQL += "'" + value + "'";
+                    }
+
+                }
+                strSQL += ");";
+                executeQuery(strSQL);
+                System.out.println(strSQL);
+                //System.out.println("Inserted ");
+                //alValues.forEach(System.out::println);
+                //System.out.println("Into " + strTable);
+                //alFields.forEach(System.out::println);
+                return true;
         } catch (SQLException e) {
             System.err.println(e.getMessage());
             return false;
