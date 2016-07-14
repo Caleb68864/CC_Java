@@ -266,6 +266,7 @@ public class CC_Database {
 
     public boolean insert(String strTable, ArrayList<String> alFields, ArrayList<String> alValues) throws SQLException {
         try {
+            if(alFields.size() == alValues.size()){
                 // Create a result set containing all data from strTable
                 String strSQL;
                 strSQL = "INSERT INTO " + strTable + " (";
@@ -294,6 +295,10 @@ public class CC_Database {
                 //System.out.println("Into " + strTable);
                 //alFields.forEach(System.out::println);
                 return true;
+            }else{
+                System.out.println("Field list and Value List Not Same Size");
+                return false;
+            }
         } catch (SQLException e) {
             System.err.println(e.getMessage());
             return false;
