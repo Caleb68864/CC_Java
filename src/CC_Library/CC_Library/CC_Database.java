@@ -102,12 +102,12 @@ public class CC_Database {
         }
     }
 
-    public ResultSet selectAll(String strTable, String strField, String strTest) throws SQLException {
+    public ResultSet selectAll(String strTable, String strTest) throws SQLException {
         try {
             // Create a result set containing all data from strTable
             String strSQL = "Select * from " + strTable;
             if(!strTest.equals("")){
-                strSQL += " where " + strField + " " + strTest;
+                strSQL += " where " + strTest;
             }
             strSQL += ";";
             //System.out.println(strSQL);
@@ -188,12 +188,12 @@ public class CC_Database {
         }
     }
 
-    public ResultSet selectField(String strTable, String strField, String strTestField, String strTest) throws SQLException {
+    public ResultSet selectField(String strTable, String strField, String strTest) throws SQLException {
         try {
             // Create a result set containing all data from strTable
             String strSQL = "Select " + strField + " from " + strTable;
-            if(!strTestField.equals("")){
-                strSQL += " where " + strTestField + " " + strTest;
+            if(!strTest.equals("")){
+                strSQL += " where " + strTest;
             }
             strSQL += ";";
             //System.out.println(strSQL);
@@ -205,12 +205,12 @@ public class CC_Database {
         }
     }
 
-    public Integer selectIntField(String strTable, String strField, String strTestField, String strTest) throws SQLException {
+    public Integer selectIntField(String strTable, String strField, String strTest) throws SQLException {
         try {
             // Create a result set containing all data from strTable
             String strSQL = "Select " + strField + " AS Field from " + strTable;
-            if(!strTestField.equals("")){
-                strSQL += " where " + strTestField + " " + strTest;
+            if(!strTest.equals("")){
+                strSQL += " where " + strTest;
             }
             strSQL += ";";
             //System.out.println(strSQL);
@@ -227,14 +227,14 @@ public class CC_Database {
         }
     }
 
-    public boolean update(String strTable, String strField, String strValue, String strTestField, String strTest) throws SQLException {
+    public boolean update(String strTable, String strField, String strValue, String strTest) throws SQLException {
         try {
-            if(strTable != "" && strField != "" && strTestField != "") {
+            if(strTable != "" && strField != "" && strTest != "") {
                 // Create a result set containing all data from strTable
-                String strSQL = "UPDATE " + strTable + " Set " + strField + "='" + strValue + "' WHERE " + strTestField + strTest + "; ";
+                String strSQL = "UPDATE " + strTable + " Set " + strField + "='" + strValue + "' WHERE " +strTest + "; ";
                 System.out.println(strSQL);
                 executeQuery(strSQL);
-                System.out.println("Updated `" + strField + "` to `" + strValue + "` Where `"  + strTestField + "` " + strTest);
+                System.out.println("Updated `" + strField + "` to `" + strValue + "` Where " + strTest);
                 return true;
             }else{
                 System.out.println("Failed to Update " + strField + " to "  + strValue + " Where " + strTest);
@@ -246,16 +246,16 @@ public class CC_Database {
         }
     }
 
-    public boolean delete(String strTable, String strTestField, String strTest) throws SQLException {
+    public boolean delete(String strTable, String strTest) throws SQLException {
         try {
-            if(strTable != "" && strTestField != "") {
+            if(strTable != "" && strTest != "") {
                 // Create a result set containing all data from strTable
-                String strSQL = "DELETE FROM " + strTable + " WHERE " + strTestField + " " + strTest + "; ";
+                String strSQL = "DELETE FROM " + strTable + " WHERE " + strTest + "; ";
                 executeQuery(strSQL);
-                System.out.println("Deleted from " + strTable + " Where "  + strTestField + " " + strTest);
+                System.out.println("Deleted from " + strTable + " Where " + strTest);
                 return true;
             }else{
-                System.out.println("Failed to Delete from " + strTable + " Where "  + strTestField + " " + strTest);
+                System.out.println("Failed to Delete from " + strTable + " Where " + strTest);
                 return false;
             }
         } catch (SQLException e) {
