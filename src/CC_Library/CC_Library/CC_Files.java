@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.function.BooleanSupplier;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -64,6 +65,24 @@ public class CC_Files {
 		}
 	}
 
+	public static ArrayList<String> readTextFileToArrayList(String inputFile) {
+		ArrayList<String> alFileText = new ArrayList<String>();
+
+		String str;
+		try {
+			BufferedReader in = new BufferedReader(new FileReader(inputFile));
+			while ((str = in.readLine()) != null) {
+				alFileText.add(str);
+			}
+			in.close();
+
+			return alFileText;
+		} catch (IOException e) {
+			alFileText.add("Oops it didn't work");
+			return alFileText;
+		}
+	}
+
 	/**
 	 * File copy.
 	 * 
@@ -111,9 +130,9 @@ public class CC_Files {
 		}
 	}
 
-	public static void writeTextFile(String filePath, String txt) {
+	public static void writeTextFile(String filePath, String txt, Boolean bolAppend) {
 		try {
-			FileWriter outFile = new FileWriter(filePath);
+			FileWriter outFile = new FileWriter(filePath,bolAppend);
 			PrintWriter out = new PrintWriter(outFile);
 
 			// Also could be written as follows on one line
@@ -125,5 +144,11 @@ public class CC_Files {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	public static String nameOnly(String filename){
+		int pos = filename.lastIndexOf(".");
+		String justName = pos > 0 ? filename.substring(0, pos) : filename;
+
+		return justName;
 	}
 }
